@@ -1,0 +1,127 @@
+using ExamProctoring.Api.Authorization;
+using ExamProctoring.Api.Errors;
+using ExamProctoring.Api.RateLimiting;
+using ExamProctoring.Application.Auth;
+using ExamProctoring.Application.Common;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+
+namespace ExamProctoring.Api.Controllers;
+
+// Authentication endpoints (§6.9): student sign-up, login, refresh, logout, change password and the caller's own account.
+[ApiController]
+[Route("api/auth")]
+public sealed class AuthController(AuthService authService) : ControllerBase
+{
+    // Request bodies of the token endpoints are small JSON objects (approved 2026-10-20). Not applied to register.
+    private const long TokenEndpointMaxBodyBytes = 16 * 1024;
+
+    // §6.4. Starts a session (a new token family). An unknown email and a wrong password get the same 401.
+    [HttpPost("login")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.Login)]
+    [RequestSizeLimit(TokenEndpointMaxBodyBytes)]
+    [ProducesResponseType<TokenResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status413PayloadTooLarge, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests, "application/problem+json")]
+    public async Task<IActionResult> Login(LoginRequest request, CancellationToken cancellationToken)
+    {
+        var result = await authService.LoginAsync(request, cancellationToken);
+
+        return result.IsSuccess ? Ok(result.Value) : this.ToProblem(result.Error!);
+    }
+
+    // §6.6. Anonymous: the refresh token in the body is the credential, so it works after the access token expired.
+    // Rotates the token; a rotated token presented again ends the whole session (401 refresh_token_reused).
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.Refresh)]
+    [RequestSizeLimit(TokenEndpointMaxBodyBytes)]
+    [ProducesResponseType<TokenResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status413PayloadTooLarge, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests, "application/problem+json")]
+    public async Task<IActionResult> Refresh(RefreshRequest request, CancellationToken cancellationToken)
+    {
+        var result = await authService.RefreshAsync(request, cancellationToken);
+
+        return result.IsSuccess ? Ok(result.Value) : this.ToProblem(result.Error!);
+    }
+
+    // §6.9, D3, D8. Ends the session of the given refresh token (its whole token family); other sessions stay.
+    // The access token used here stays valid until it expires (§6.6). Always 204 for a valid access token.
+    [HttpPost("logout")]
+    [Authorize]
+    [AllowedDuringPasswordChange]
+    [RequestSizeLimit(TokenEndpointMaxBodyBytes)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status413PayloadTooLarge, "application/problem+json")]
+    public async Task<IActionResult> Logout(LogoutRequest request, CancellationToken cancellationToken)
+    {
+        var result = await authService.LogoutAsync(request, cancellationToken);
+
+        return result.IsSuccess ? NoContent() : this.ToProblem(result.Error!);
+    }
+
+    // §6.4, §6.5, D7, D9. Also the way out of a forced password change (§6.3). Returns a new token pair; every
+    // previous session and access token of the user stops working.
+    [HttpPost("change-password")]
+    [Authorize]
+    [AllowedDuringPasswordChange]
+    [RequestSizeLimit(TokenEndpointMaxBodyBytes)]
+    [ProducesResponseType<TokenResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status413PayloadTooLarge, "application/problem+json")]
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken cancellationToken)
+    {
+        var result = await authService.ChangePasswordAsync(request, cancellationToken);
+        if (result.IsSuccess)
+            return Ok(result.Value);
+
+        // D9: a locked account is 403 here, not login's 401: the caller is authenticated, and a 401 would make
+        // clients refresh their token and retry.
+        return this.ToProblem(result.Error!,
+            result.Error!.Code == ErrorCodes.AccountLocked ? StatusCodes.Status403Forbidden : null);
+    }
+
+    // §6.9. Any active user, also while a password change is required (§6.3).
+    [HttpGet("me")]
+    [Authorize]
+    [AllowedDuringPasswordChange]
+    [ProducesResponseType<MeResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, "application/problem+json")]
+    public async Task<IActionResult> Me(CancellationToken cancellationToken)
+    {
+        var result = await authService.GetMeAsync(cancellationToken);
+
+        return result.IsSuccess ? Ok(result.Value) : this.ToProblem(result.Error!);
+    }
+
+    // §6.4. Students only: the role is always Student, whatever the request contains. No tokens are returned;
+    // the client logs in afterwards.
+    [HttpPost("register")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.Register)]
+    [ProducesResponseType<RegisterStudentResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests, "application/problem+json")]
+    public async Task<IActionResult> Register(RegisterStudentRequest request, CancellationToken cancellationToken)
+    {
+        var result = await authService.RegisterStudentAsync(request, cancellationToken);
+
+        return result.IsSuccess
+            ? StatusCode(StatusCodes.Status201Created, result.Value)
+            : this.ToProblem(result.Error!);
+    }
+}

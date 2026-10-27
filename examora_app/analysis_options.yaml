@@ -1,0 +1,44 @@
+# Stricter than flutter_lints, as required by the specification: un-awaited futures, uncancelled subscriptions,
+# unclosed sinks and BuildContext use after an await are ERRORS, and public API documentation is enforced.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    unawaited_futures: error
+    cancel_subscriptions: error
+    close_sinks: error
+    use_build_context_synchronously: error
+    public_member_api_docs: error
+    avoid_dynamic_calls: error
+    always_use_package_imports: error
+
+linter:
+  rules:
+    - always_declare_return_types
+    - always_use_package_imports
+    - avoid_dynamic_calls
+    - avoid_print
+    - cancel_subscriptions
+    - close_sinks
+    - directives_ordering
+    - prefer_final_locals
+    - prefer_single_quotes
+    - public_member_api_docs
+    - unawaited_futures
+    - unnecessary_lambdas
+    - use_build_context_synchronously
+
+formatter:
+  page_width: 120

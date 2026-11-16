@@ -1,46 +1,109 @@
-// The few Material icons the mobile app uses, as inline SVG (24 x 24), so the web app shows the same pictures.
-const PATHS = {
-  arrowBack: 'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z',
-  add: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z',
-  check: 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',
-  person: 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',
-  personOutline:
-    'M12 6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2m0 9c2.7 0 5.8 1.29 6 2v1H6v-1c.2-.71 3.3-2 6-2M12 4C9.79 4 8 5.79 8 8s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 9c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4z',
-  home: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
-  homeOutline: 'M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z',
-  assignment:
-    'M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z',
-  assignmentOutline:
-    'M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7-.25c.41 0 .75.34.75.75s-.34.75-.75.75-.75-.34-.75-.75.34-.75.75-.75zM19 19H5V5h14v14zM7 12h10v2H7zm0 4h7v2H7zm0-8h10v2H7z',
-  uploadFile:
-    'M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 15.01l1.41 1.41L11 14.84V19h2v-4.16l1.59 1.59L16 15.01 12.01 11 8 15.01z',
-  logout: 'M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z',
-  lock: 'M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM8.9 6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2H8.9V6zM18 20H6V10h12v10z',
-  personAdd:
-    'M13 8c0-2.21-1.79-4-4-4S5 5.79 5 8s1.79 4 4 4 4-1.79 4-4zm2 2v2h3v3h2v-3h3v-2h-3V7h-2v3h-3zM1 18v2h16v-2c0-2.66-5.33-4-8-4s-8 1.34-8 4z',
-  error:
-    'M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z',
-  info: 'M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z',
-  success:
-    'M16.59 7.58L10 14.17l-3.59-3.58L5 12l5 5 8-8zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z',
-  warning: 'M12 5.99L19.53 19H4.47L12 5.99M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z',
-  inbox:
-    'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5v-3h3.56c.69 1.19 1.97 2 3.45 2s2.75-.81 3.45-2H19v3zm0-5h-4.99c0 1.1-.9 2-2 2s-2-.9-2-2H5V5h14v9z',
-  people:
-    'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z',
-  block:
-    'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z',
-  report:
-    'M15.73 3H8.27L3 8.27v7.46L8.27 21h7.46L21 15.73V8.27L15.73 3zM12 17.3c-.72 0-1.3-.58-1.3-1.3 0-.72.58-1.3 1.3-1.3.72 0 1.3.58 1.3 1.3 0 .72-.58 1.3-1.3 1.3zm1-4.3h-2V7h2v6z',
-  key: 'M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z',
+// The Examora icon set: line icons on a 24 px grid, 1.75 stroke, round caps and joins (brand guidelines, "Iconography").
+// Icons are never filled and never multicolour: they take their colour from the text colour around them.
+// Each icon is a list of path strings; the names the app already used (home, assignment, person ...) are kept.
+
+const SHEET = 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z M14 3v5h5';
+const PERSON = ['M12 11.5a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5z', 'M4.5 20c.7-3.5 3.6-5.5 7.5-5.5s6.8 2 7.5 5.5'];
+const CIRCLE = 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z';
+
+const SHAPES = {
+  shieldCheck: ['M12 3l7 3v5.5c0 4.2-2.8 7.4-7 9.5-4.2-2.1-7-5.3-7-9.5V6l7-3z', 'M9 12l2.2 2.2L15 10.5'],
+  examSheet: [SHEET, 'M9 13h6', 'M9 17h4'],
+  home: ['M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1v-8z'],
+  person: PERSON,
+  users: [
+    'M9.5 11a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5z',
+    'M3 19.5c.6-3 3-4.75 6.5-4.75s5.9 1.75 6.5 4.75',
+    'M15.5 4.7a3.25 3.25 0 0 1 0 6.1',
+    'M17.5 14.9c1.9.5 3.1 1.9 3.5 4.1',
+  ],
+  userPlus: [
+    'M9.5 11a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5z',
+    'M3 19.5c.6-3 3-4.75 6.5-4.75 1.4 0 2.6.3 3.6.8',
+    'M18 14v6',
+    'M15 17h6',
+  ],
+  plus: ['M12 5v14', 'M5 12h14'],
+  check: ['M5 12.5l4.5 4.5L19 7.5'],
+  arrowLeft: ['M19 12H5', 'M11 6l-6 6 6 6'],
+  arrowRight: ['M5 12h14', 'M13 6l6 6-6 6'],
+  upload: [SHEET, 'M12 17v-6', 'M9.5 13.5L12 11l2.5 2.5'],
+  download: ['M12 4v11', 'M7.5 10.5L12 15l4.5-4.5', 'M5 20h14'],
+  logout: ['M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3', 'M16 8l4 4-4 4', 'M20 12H9'],
+  lock: ['M6 11h12a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1z', 'M8 11V8a4 4 0 0 1 8 0v3', 'M12 15v2'],
+  alertCircle: [CIRCLE, 'M12 8v5', 'M12 16.2v.01'],
+  infoCircle: [CIRCLE, 'M12 11v5.2', 'M12 7.8v.01'],
+  checkCircle: [CIRCLE, 'M8.4 12.3l2.5 2.5 4.7-5'],
+  alertTriangle: ['M12 4l9.2 16H2.8L12 4z', 'M12 10v4', 'M12 17v.01'],
+  inbox: ['M4 13l2.1-6.9A2 2 0 0 1 8 4.7h8a2 2 0 0 1 1.9 1.4L20 13v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-5z', 'M4 13h4.5l1 2h5l1-2H20'],
+  ban: [CIRCLE, 'M5.7 5.7l12.6 12.6'],
+  flag: ['M6 21V4', 'M6 4h11l-2.6 4.5L17 13H6'],
+  key: ['M9 15.5a3.75 3.75 0 1 1 3-6', 'M12 12.5L20 4.5', 'M16.5 8l2.5 2.5'],
+  chart: ['M4 4v16h16', 'M8.5 16v-4', 'M12.5 16V8', 'M16.5 16v-6'],
+  calendar: ['M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z', 'M4 10.5h16', 'M8 3.5V7', 'M16 3.5V7'],
+  timer: ['M12 21a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15z', 'M12 9.5V13l2.2 1.6', 'M9.5 3h5'],
+  award: ['M12 14.5a5 5 0 1 0 0-10 5 5 0 0 0 0 10z', 'M9.2 13.8L8 20.5l4-2.2 4 2.2-1.2-6.7', 'M10 9.6l1.5 1.5 2.7-2.8'],
+  settings: ['M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', 'M12 3v2.5', 'M12 18.5V21', 'M3 12h2.5', 'M18.5 12H21', 'M5.6 5.6l1.8 1.8', 'M16.6 16.6l1.8 1.8', 'M18.4 5.6l-1.8 1.8', 'M7.4 16.6l-1.8 1.8'],
+  search: ['M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14z', 'M16.2 16.2L20 20'],
+  bell: ['M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15L6 16.5z', 'M10 21h4'],
+  eye: ['M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z', 'M12 14.75a2.75 2.75 0 1 0 0-5.5 2.75 2.75 0 0 0 0 5.5z'],
+  eyeOff: ['M3 3l18 18', 'M10.6 5.7A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a16 16 0 0 1-3 3.8', 'M6.5 7.6A15.7 15.7 0 0 0 2.5 12S6 18.5 12 18.5c1.4 0 2.6-.3 3.7-.8', 'M9.9 9.9a2.75 2.75 0 0 0 3.9 3.9'],
+  globe: [CIRCLE, 'M3 12h18', 'M12 3c2.5 2.5 3.6 5.5 3.6 9s-1.1 6.5-3.6 9c-2.5-2.5-3.6-5.5-3.6-9S9.5 5.5 12 3z'],
+  camera: ['M4 7h9a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z', 'M15 11l6-3.5v9L15 13'],
+  mail: ['M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z', 'M3.5 7.5l8.5 6 8.5-6'],
+  bolt: ['M13 3L5 14h6l-1 7 8-11h-6l1-7z'],
+  layers: ['M12 4l9 5-9 5-9-5 9-5z', 'M3 13.5l9 5 9-5'],
+  trash: ['M4 7h16', 'M9 7V4.5h6V7', 'M6.5 7l.8 12.5h9.4L17.5 7', 'M10 11v5', 'M14 11v5'],
+  edit: ['M4 20l1-4L16.5 4.5a2 2 0 0 1 2.8 0l.2.2a2 2 0 0 1 0 2.8L8 19l-4 1z', 'M14.5 6.5l3 3'],
+  menu: ['M4 7h16', 'M4 12h16', 'M4 17h16'],
+  close: ['M6 6l12 12', 'M18 6L6 18'],
+} satisfies Record<string, string[]>;
+
+// The names the app used before the brand set, mapped onto it. The Outline/selected pairs are the same drawing: in this
+// style a selected item is shown by its colour and background, not by filling the icon.
+const ALIASES = {
+  arrowBack: 'arrowLeft',
+  add: 'plus',
+  homeOutline: 'home',
+  personOutline: 'person',
+  assignment: 'examSheet',
+  assignmentOutline: 'examSheet',
+  uploadFile: 'upload',
+  error: 'alertCircle',
+  info: 'infoCircle',
+  success: 'checkCircle',
+  warning: 'alertTriangle',
+  people: 'users',
+  personAdd: 'userPlus',
+  block: 'ban',
+  report: 'flag',
 } as const;
 
-export type IconName = keyof typeof PATHS;
+export type IconName = keyof typeof SHAPES | keyof typeof ALIASES;
+
+function pathsOf(name: IconName): readonly string[] {
+  const resolved = (name in ALIASES ? ALIASES[name as keyof typeof ALIASES] : name) as keyof typeof SHAPES;
+  return SHAPES[resolved];
+}
 
 export function Icon({ name, size = 24, className }: { name: IconName; size?: number; className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" fill="currentColor">
-      <path d={PATHS[name]} />
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      focusable="false"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {pathsOf(name).map((d) => (
+        <path key={d} d={d} />
+      ))}
     </svg>
   );
 }

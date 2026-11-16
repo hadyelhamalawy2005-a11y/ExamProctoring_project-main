@@ -143,3 +143,10 @@ One sign-in for every role. The role comes from the backend's token response (ne
 | Administrator | `/admin/accounts`, `/admin/accounts/:id`, `/admin/instructors/new` | `GET /api/admin/accounts`, `GET /api/admin/accounts/{id}`, `POST /api/admin/instructors`, `POST /api/admin/accounts/{id}/temporary-password`, `.../deactivate`, `.../reactivate` |
 | Instructor | `/exams`, `/exams/new`, `/exams/:id`, `/exams/:id/edit`, `/exams/:id/preview`, `/import` (`/instructor` redirects to the exam list) | the exam and question endpoints above |
 | Student | `/student` (placeholder only) | none: the backend has no student exam endpoints |
+
+## Brand identity
+
+The app follows the Examora brand identity (burgundy, berry, gold, charcoal and warm off-white; Sora, Plus Jakarta Sans,
+IBM Plex Sans Arabic and JetBrains Mono, all bundled; the shield-and-fold logo as SVG). Design tokens are in
+`src/brand/tokens.css`, components use only the semantic layer so a dark theme can be added later. See
+`../docs/Brand_Implementation.md` for the files, the decisions and what was read from the guidelines versus chosen by us.

@@ -179,7 +179,7 @@ describe('language switching in the running app', () => {
 });
 
 // Read from disk: the test environment does not give the stylesheet's text through an import.
-const css = readFileSync('src/styles.css', 'utf-8');
+const css = readFileSync('src/brand/tokens.css', 'utf-8') + readFileSync('src/styles.css', 'utf-8');
 
 describe('right-to-left support in the stylesheet', () => {
   it('uses logical properties instead of physical left/right ones', () => {
@@ -193,6 +193,6 @@ describe('right-to-left support in the stylesheet', () => {
   });
 
   it('has an Arabic-capable font stack', () => {
-    expect(css).toMatch(/--font:[^;]*(Tahoma|Noto Naskh Arabic|Noto Sans Arabic)/);
+    expect(css).toMatch(/--font-text:[^;]*(IBM Plex Sans Arabic)/);
   });
 });

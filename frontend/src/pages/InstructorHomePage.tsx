@@ -3,7 +3,7 @@ import { describeError } from '../api/errors';
 import { listExams } from '../api/exams';
 import { useAuth } from '../auth/AuthContext';
 import { Alert, PageLoader } from '../components/Feedback';
-import { Icon } from '../components/Icon';
+import { Icon, type IconName } from '../components/Icon';
 import { useLoader } from '../hooks/useLoader';
 import { useI18n } from '../i18n/LanguageContext';
 import type { ExamStatus } from '../types/api';
@@ -25,24 +25,27 @@ export function InstructorHomePage() {
     [],
   );
 
+  const statIcon: Record<ExamStatus, IconName> = { Draft: 'edit', Published: 'shieldCheck', Cancelled: 'ban' };
+
   return (
     <div className="page">
       {session && (
-        <div className="card">
+        <section className="hero pattern">
+          <p className="overline">{t(`role.${session.user.role}`)}</p>
           <h1>{t('home.welcome', { name: session.user.fullName })}</h1>
-          <p className="muted">{t(`role.${session.user.role}`)}</p>
-        </div>
+          <p>{t('home.heroBody')}</p>
+          <div className="hero-actions">
+            <Link to="/exams/new/method" className="button">
+              <Icon name="add" size={18} />
+              {t('list.createExam')}
+            </Link>
+            <Link to="/import" className="button button-secondary">
+              <Icon name="uploadFile" size={18} />
+              {t('nav.import')}
+            </Link>
+          </div>
+        </section>
       )}
-
-      <Link to="/exams/new/method" className="button button-block">
-        <Icon name="add" size={18} />
-        {t('list.createExam')}
-      </Link>
-
-      <Link to="/import" className="button button-secondary button-block">
-        <Icon name="uploadFile" size={18} />
-        {t('nav.import')}
-      </Link>
 
       <h2 className="section-title">{t('home.yourExams')}</h2>
       {counts.loading && !counts.data && <PageLoader label={t('list.loading')} />}
@@ -55,19 +58,42 @@ export function InstructorHomePage() {
         </Alert>
       )}
       {counts.data && (
-        <div className="count-row">
+        <div className="stat-grid">
           {STATUSES.map((status) => (
-            <span key={status} data-testid={`count-${status}`}>
-              {t('home.countLine', { label: t(`status.${status}`), n: formatNumber(counts.data![status]) })}
-            </span>
+            <Link key={status} to={`/exams?status=${status}`} className="stat-card" data-testid={`count-${status}`}>
+              <span className="sr-only">{t('home.countLine', { label: t(`status.${status}`), n: formatNumber(counts.data![status]) })}</span>
+              <span className="stat-card-head" aria-hidden="true">
+                <Icon name={statIcon[status]} size={20} />
+                {t(`status.${status}`)}
+              </span>
+              <span className="stat-value" aria-hidden="true">
+                {formatNumber(counts.data![status])}
+              </span>
+            </Link>
           ))}
         </div>
       )}
 
-      <h2 className="section-title">{t('home.attempts')}</h2>
-      <p className="muted">{t('home.attemptsUnavailable')}</p>
-      <h2 className="section-title">{t('nav.incidents')}</h2>
-      <p className="muted">{t('home.incidentsUnavailable')}</p>
+      <div className="action-grid">
+        <div className="card notice-card">
+          <span className="feature-tile feature-tile-gold" aria-hidden="true">
+            <Icon name="examSheet" size={22} />
+          </span>
+          <div>
+            <h3>{t('home.attempts')}</h3>
+            <p className="muted">{t('home.attemptsUnavailable')}</p>
+          </div>
+        </div>
+        <div className="card notice-card">
+          <span className="feature-tile" aria-hidden="true">
+            <Icon name="flag" size={22} />
+          </span>
+          <div>
+            <h3>{t('nav.incidents')}</h3>
+            <p className="muted">{t('home.incidentsUnavailable')}</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

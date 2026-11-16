@@ -7,10 +7,10 @@ import { useAuth } from '../auth/AuthContext';
 import { Alert } from '../components/Feedback';
 import { FormField, describedBy } from '../components/FormField';
 import { useI18n } from '../i18n/LanguageContext';
-import { LanguageToggle } from '../i18n/LanguageToggle';
 import { msg, serverFieldMsgs, type Msg } from '../i18n/serverMessages';
 import { focusFirstInvalid } from '../utils/focus';
 import { LIMITS, validateRegisterForm, type RegisterFormValues } from '../utils/validation';
+import { AuthShell } from '../components/AuthShell';
 
 const EMPTY: RegisterFormValues = { fullName: '', email: '', password: '', confirmPassword: '' };
 const FIELDS = ['fullName', 'email', 'password', 'confirmPassword'] as const;
@@ -71,27 +71,21 @@ export function RegisterPage() {
 
   if (created) {
     return (
-      <main className="auth-page">
-        <div className="card auth-card success-panel">
-          <div className="auth-toolbar">
-            <LanguageToggle />
-          </div>
+      <AuthShell>
+        <div className="auth-card success-panel">
           <h1>{t('reg.successTitle')}</h1>
           <Alert tone="success">{t('reg.successBody')}</Alert>
           <Link className="button button-block" to="/login">
             {t('reg.successSignIn')}
           </Link>
         </div>
-      </main>
+      </AuthShell>
     );
   }
 
   return (
-    <main className="auth-page">
-      <form className="card auth-card form" onSubmit={(event) => void handleSubmit(event)} noValidate>
-        <div className="auth-toolbar">
-          <LanguageToggle />
-        </div>
+    <AuthShell>
+      <form className="auth-card form" onSubmit={(event) => void handleSubmit(event)} noValidate>
         <h1>{t('reg.title')}</h1>
         <p className="muted">{t('reg.subtitle')}</p>
         {error && <Alert tone="error">{describeError(error.cause, i18n)}</Alert>}
@@ -150,6 +144,6 @@ export function RegisterPage() {
           {t('reg.haveAccount')} <Link to="/login">{t('reg.signIn')}</Link>
         </p>
       </form>
-    </main>
+    </AuthShell>
   );
 }

@@ -118,12 +118,13 @@ describe('the accounts list', () => {
     expect(within(card).getByText(ar['role.Student'])).toBeInTheDocument();
   });
 
-  it('uses the admin shell: a title bar with a profile button, no bottom navigation', async () => {
+  it('uses the admin shell: a title bar and navigation to the accounts, a new instructor and the profile', async () => {
     mockApi({ [LIST]: [() => page([])] });
     renderApp('/admin/accounts');
     expect(await screen.findByRole('heading', { name: en['admin.list.title'] })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: en['nav.profile'] })).toHaveAttribute('href', '/profile');
-    expect(screen.queryByRole('navigation', { name: en['nav.main'] })).not.toBeInTheDocument();
+    const nav = screen.getByRole('navigation', { name: en['nav.main'] });
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Accounts', 'New', 'Profile']);
+    expect(within(nav).getByRole('link', { name: en['nav.profile'] })).toHaveAttribute('href', '/profile');
     expect(screen.getByRole('link', { name: en['admin.list.newInstructor'] })).toHaveAttribute('href', '/admin/instructors/new');
   });
 });

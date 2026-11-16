@@ -49,12 +49,12 @@ describe('instructor Home', () => {
     expect(screen.queryByTestId('count-Draft')).not.toBeInTheDocument();
   });
 
-  it('has the mobile app’s four tabs, and Create exam goes to the method screen', async () => {
+  it('has the role’s five tabs, and Create exam goes to the method screen', async () => {
     signIn('Instructor');
     mockApi({ [EXAMS]: [list(0)] });
     renderApp('/instructor');
     const nav = await screen.findByRole('navigation', { name: en['nav.main'] });
-    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Home', 'Exams', 'Incidents', 'Profile']);
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Home', 'Exams', 'Import', 'Incidents', 'Profile']);
     expect(screen.getByRole('link', { name: en['list.createExam'] })).toHaveAttribute('href', '/exams/new/method');
   });
 

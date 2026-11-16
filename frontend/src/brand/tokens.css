@@ -1,0 +1,142 @@
+/*
+  Examora design tokens (light theme).
+
+  Layers, so a dark theme can be added later without touching a single component rule:
+    1. Brand palette  the five colours labelled in the brand guidelines, plus reference values read from its imagery.
+    2. Semantic       what components use: surface, text, line, primary, status colours. A dark theme only has to
+                      redefine this layer, in a `:root[data-theme='dark']` block placed after this one.
+    3. Scale          type, space, radius, elevation, motion. Theme independent.
+
+  Components must use the semantic layer (and the scale), never the brand palette or a literal colour.
+*/
+
+:root {
+  /* ---- 1. Brand palette ---- */
+
+  /* Labelled in the guidelines: authoritative. */
+  --brand-burgundy: #7a1f2b; /* primary, 45% */
+  --brand-berry: #a83249; /* accent, 10% */
+  --brand-gold: #d7ad65; /* highlight, 5%: the fold, "verified" */
+  --brand-charcoal: #23242b; /* text, 15% */
+  --brand-offwhite: #f8f6f2; /* ground, 25% */
+
+  /* Reference values: read from the pixels of the guidelines' colour page and product screens. */
+  --ref-burgundy-hover: #651a25;
+  --ref-burgundy-press: #521320;
+  --ref-burgundy-soft: #f6e6e8;
+  --ref-gold-soft: #f8eedb;
+  --ref-sunken: #f1eee8;
+  --ref-line: #e6e1d8;
+  --ref-line-strong: #cfc8bc;
+  --ref-text-muted: #5e5d66;
+  --ref-verified: #13795b;
+  --ref-verified-soft: #e3f3ec;
+  --ref-caution: #8f5b00;
+  --ref-caution-soft: #fbf0dc;
+  --ref-violation: #b4380f; /* danger leans orange so an error never reads as the brand colour */
+  --ref-violation-soft: #fbe8e1;
+  --ref-scheduled: #2456c9;
+  --ref-scheduled-soft: #e6edfb;
+  --ref-series-teal: #2f6f8f;
+
+  /* ---- 2. Semantic tokens (light) ---- */
+
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg: var(--brand-offwhite);
+  --surface: #ffffff;
+  --surface-sunken: var(--ref-sunken);
+  --surface-sidebar: #ffffff;
+  --surface-overlay: rgba(35, 36, 43, 0.48);
+
+  /* Text */
+  --text: var(--brand-charcoal);
+  --text-muted: var(--ref-text-muted);
+  --text-on-primary: #ffffff;
+  --text-link: var(--brand-burgundy);
+
+  /* Lines */
+  --line: var(--ref-line);
+  --line-strong: var(--ref-line-strong);
+  /* The edge of a form field. The guidelines' imagery draws it in the lighter --line-strong (1.7:1 on white); fields
+     use this darker warm grey (3.4:1) so their boundary meets the 3:1 contrast WCAG asks for UI components. */
+  --field-border: #8f897e;
+
+  /* Brand roles */
+  --primary: var(--brand-burgundy);
+  --primary-hover: var(--ref-burgundy-hover);
+  --primary-press: var(--ref-burgundy-press);
+  --primary-soft: var(--ref-burgundy-soft);
+  --accent: var(--brand-berry);
+  --highlight: var(--brand-gold);
+  --highlight-soft: var(--ref-gold-soft);
+  --focus-ring: var(--brand-berry);
+
+  /* Status: always shown with an icon and a word, never by colour alone. */
+  --status-verified: var(--ref-verified);
+  --status-verified-bg: var(--ref-verified-soft);
+  --status-caution: var(--ref-caution);
+  --status-caution-bg: var(--ref-caution-soft);
+  --status-violation: var(--ref-violation);
+  --status-violation-bg: var(--ref-violation-soft);
+  --status-scheduled: var(--ref-scheduled);
+  --status-scheduled-bg: var(--ref-scheduled-soft);
+  --status-neutral: var(--ref-text-muted);
+  --status-neutral-bg: var(--ref-sunken);
+
+  /* Disabled controls */
+  --disabled-bg: var(--ref-sunken);
+  --disabled-text: #77757e;
+
+  /* Data series (bars, rings): burgundy leads, berry, gold, then teal. */
+  --series-1: var(--brand-burgundy);
+  --series-2: var(--brand-berry);
+  --series-3: var(--brand-gold);
+  --series-4: var(--ref-series-teal);
+
+  /* Code editor chrome */
+  --code-bar: var(--brand-charcoal);
+  --code-bar-text: #ffffff;
+
+  /* ---- 3. Scale ---- */
+
+  /* Type: Sora for display and headings, Plus Jakarta Sans for text and UI, IBM Plex Sans Arabic for Arabic,
+     JetBrains Mono for overlines, codes and numbers that must align. All four are bundled, none is fetched. */
+  --font-display: 'Sora', 'Plus Jakarta Sans', 'IBM Plex Sans Arabic', 'Segoe UI', system-ui, sans-serif;
+  --font-text: 'Plus Jakarta Sans', 'IBM Plex Sans Arabic', 'Segoe UI', system-ui, -apple-system, Roboto, Tahoma, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  --font: var(--font-text);
+
+  --text-display: 2.5rem; /* display, scaled down from the guidelines' 64/68 for a product UI */
+  --text-h1: 1.75rem; /* 28 */
+  --text-h2: 1.25rem; /* 20 */
+  --text-h3: 1rem; /* 16 */
+  --text-body-l: 1.125rem; /* 18/28 */
+  --text-body: 1rem; /* 16/24 */
+  --text-small: 0.875rem; /* 14 */
+  --text-caption: 0.75rem; /* 12 */
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgba(35, 36, 43, 0.04);
+  --shadow-raised: 0 8px 24px rgba(35, 36, 43, 0.1);
+
+  --sidebar-width: 17rem;
+  --topbar-height: 3.5rem;
+  --bottom-nav-height: 4.5rem;
+  --content-width: 64rem;
+  --content-narrow: 40rem;
+}

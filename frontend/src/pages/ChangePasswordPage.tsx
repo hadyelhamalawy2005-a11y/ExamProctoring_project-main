@@ -6,9 +6,9 @@ import { useAuth } from '../auth/AuthContext';
 import { Alert } from '../components/Feedback';
 import { FormField, describedBy } from '../components/FormField';
 import { useI18n } from '../i18n/LanguageContext';
-import { LanguageToggle } from '../i18n/LanguageToggle';
 import { msg, serverFieldMsgs, type Msg } from '../i18n/serverMessages';
 import { focusFirstInvalid } from '../utils/focus';
+import { AuthShell } from '../components/AuthShell';
 
 // POST /api/auth/change-password. Required after signing in with a temporary password; every other endpoint answers
 // 403 password_change_required until it is done. The server returns a new token pair and ends earlier sessions.
@@ -57,11 +57,8 @@ export function ChangePasswordPage() {
   };
 
   return (
-    <main className="auth-page">
-      <form className="card auth-card form" onSubmit={(event) => void handleSubmit(event)} noValidate>
-        <div className="auth-toolbar">
-          <LanguageToggle />
-        </div>
+    <AuthShell>
+      <form className="auth-card form" onSubmit={(event) => void handleSubmit(event)} noValidate>
         <h1>{required ? t('cp.titleRequired') : t('cp.title')}</h1>
         {required && <p className="muted">{t('cp.temporaryNotice')}</p>}
         <p className="muted">{t('cp.policy')}</p>
@@ -113,6 +110,6 @@ export function ChangePasswordPage() {
           {t('cp.signOutInstead')}
         </button>
       </form>
-    </main>
+    </AuthShell>
   );
 }

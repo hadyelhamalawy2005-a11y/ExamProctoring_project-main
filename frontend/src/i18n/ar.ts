@@ -3,7 +3,7 @@ import type { TranslationKey } from './en';
 // Arabic dictionary. The type forces exactly the same keys as en.ts (a missing or extra key is a TypeScript error).
 export const ar: Record<TranslationKey, string> = {
   // ---- General ----
-  'app.name': 'مراقبة الامتحانات',
+  'app.name': 'Examora',
   'app.instructor': 'المدرّس',
   'common.loading': 'جارٍ التحميل…',
   'common.working': 'جارٍ التنفيذ…',
@@ -612,4 +612,10 @@ export const ar: Record<TranslationKey, string> = {
   'qform.modeMultiple': 'إجابات متعددة: يختار الطالب كل ما ينطبق.',
   'questions.multipleAnswers': 'عدة إجابات صحيحة',
   'preview.chooseMany': 'اختر كل ما ينطبق',
+  'nav.importShort': 'استيراد',
+  'nav.newInstructorShort': 'جديد',
+  'nav.skip': 'انتقل إلى المحتوى',
+  'brand.line1': 'امتحانات آمنة.',
+  'brand.line2': 'نتائج موثوقة.',
+  'home.heroBody': 'أنشئ امتحانًا، وأضف أسئلته، وانشره عندما يكون جاهزًا.',
 };

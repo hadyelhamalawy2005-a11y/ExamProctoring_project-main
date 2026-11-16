@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthContext';
 import { Icon } from '../components/Icon';
 import { useI18n } from '../i18n/LanguageContext';
 import { LanguageToggle } from '../i18n/LanguageToggle';
+import { initialsOf } from '../utils/names';
 
 function Line({ label, value, ltr }: { label: string; value: string; ltr?: boolean }) {
   return (
@@ -31,6 +32,9 @@ export function ProfilePage() {
       <div className="card profile-card">
         {session && (
           <>
+            <span className="avatar avatar-lg" aria-hidden="true">
+              {initialsOf(session.user.fullName)}
+            </span>
             <Line label={t('profile.name')} value={session.user.fullName} />
             <Line label={t('reg.email')} value={session.user.email} ltr />
             <Line label={t('profile.role')} value={t(`role.${session.user.role}`)} />

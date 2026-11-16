@@ -14,7 +14,8 @@ describe('the sign-in page design', () => {
   it('shows the brand, the heading, the administrator-account subtitle and the supporting note', async () => {
     mockApi({});
     renderApp('/login');
-    expect(await screen.findByText('Examora')).toBeInTheDocument();
+    expect(await screen.findByRole('img', { name: 'Examora' })).toBeInTheDocument();
+    expect(screen.getByText(en['brand.line1'])).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
     expect(screen.getByText('Sign in with the account your administrator gave you.')).toBeInTheDocument();
     expect(screen.getByText('Accounts are created by your administrator.')).toBeInTheDocument();
@@ -97,7 +98,8 @@ describe('the sign-in page design', () => {
     expect(document.documentElement).toHaveAttribute('dir', 'rtl');
     expect(screen.getByText(ar['login.subtitle'])).toBeInTheDocument();
     expect(screen.getByText(ar['login.accountsByAdmin'])).toBeInTheDocument();
-    expect(screen.getByText('Examora')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Examora' })).toBeInTheDocument();
+    expect(screen.getByText(ar['brand.line1'])).toBeInTheDocument();
     // Email and password are typed left to right, even on a right-to-left page.
     expect(screen.getByLabelText(ar['login.email'])).toHaveAttribute('dir', 'ltr');
   });

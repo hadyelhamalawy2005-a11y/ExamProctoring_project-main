@@ -10,10 +10,10 @@ export function StudentHomePage() {
   return (
     <div className="page">
       {session && (
-        <div className="card">
+        <section className="hero pattern">
+          <p className="overline">{t(`role.${session.user.role}`)}</p>
           <h1>{t('home.welcome', { name: session.user.fullName })}</h1>
-          <p className="muted">{t(`role.${session.user.role}`)}</p>
-        </div>
+        </section>
       )}
       <Alert tone="info">{t('student.body')}</Alert>
     </div>

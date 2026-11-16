@@ -7,9 +7,9 @@ import { tokenStore } from '../auth/tokenStore';
 import { Alert } from '../components/Feedback';
 import { FloatingField } from '../components/FloatingField';
 import { useI18n } from '../i18n/LanguageContext';
-import { LanguageToggle } from '../i18n/LanguageToggle';
 import { msg, serverFieldMsgs, type Msg } from '../i18n/serverMessages';
 import { focusFirstInvalid } from '../utils/focus';
+import { AuthShell } from '../components/AuthShell';
 
 // POST /api/auth/login. Instructor accounts are created by an admin with a temporary password, which must be changed
 // at first sign-in (the backend then answers mustChangePassword: true).
@@ -67,20 +67,10 @@ export function LoginPage() {
   };
 
   return (
-    <main className="login-page">
-      <form className="login-column" onSubmit={(event) => void handleSubmit(event)} noValidate>
-        <div className="login-toolbar">
-          <LanguageToggle />
-        </div>
-        <svg className="login-logo" viewBox="0 0 24 24" width="48" height="48" aria-hidden="true" focusable="false">
-          <path
-            fill="currentColor"
-            d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9z"
-          />
-        </svg>
-        <p className="login-brand">Examora</p>
-        <h1 className="login-title">{t('login.title')}</h1>
-        <p className="login-subtitle">{t('login.subtitle')}</p>
+    <AuthShell>
+      <form className="auth-card" onSubmit={(event) => void handleSubmit(event)} noValidate>
+        <h1 className="auth-title">{t('login.title')}</h1>
+        <p className="auth-subtitle">{t('login.subtitle')}</p>
         {sessionEnded && (
           <Alert tone="info" onDismiss={dismissSessionEnded}>
             {t('login.sessionEnded')}
@@ -109,18 +99,20 @@ export function LoginPage() {
           error={fieldErrors.password}
           disabled={submitting}
         />
-        <button type="submit" className="login-submit" disabled={submitting}>
-          {submitting && <span className="login-spinner" aria-hidden="true" />}
+        <button type="submit" className="button button-block" disabled={submitting}>
+          {submitting && <span className="button-spinner" aria-hidden="true" />}
           {submitting ? t('login.submitting') : t('login.submit')}
         </button>
-        <Link className="login-link" to="/forgot-password">
-          {t('login.forgot')}
-        </Link>
-        <Link className="login-link" to="/register">
-          {t('login.createAccount')}
-        </Link>
-        <p className="login-note">{t('login.accountsByAdmin')}</p>
+        <div className="auth-links">
+          <Link className="auth-link" to="/forgot-password">
+            {t('login.forgot')}
+          </Link>
+          <Link className="auth-link" to="/register">
+            {t('login.createAccount')}
+          </Link>
+        </div>
+        <p className="auth-note">{t('login.accountsByAdmin')}</p>
       </form>
-    </main>
+    </AuthShell>
   );
 }

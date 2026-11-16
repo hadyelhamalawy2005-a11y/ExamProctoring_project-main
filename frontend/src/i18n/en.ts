@@ -3,7 +3,7 @@
 // translated back from the server's English text through serverMessages.ts.
 export const en = {
   // ---- General ----
-  'app.name': 'Exam Proctoring',
+  'app.name': 'Examora',
   'app.instructor': 'Instructor',
   'common.loading': 'Loading…',
   'common.working': 'Working…',
@@ -612,6 +612,12 @@ export const en = {
   'qform.modeMultiple': 'Multiple answers: students pick all that apply.',
   'questions.multipleAnswers': 'Several correct answers',
   'preview.chooseMany': 'Choose all that apply',
+  'nav.importShort': 'Import',
+  'nav.newInstructorShort': 'New',
+  'nav.skip': 'Skip to content',
+  'brand.line1': 'Secure exams.',
+  'brand.line2': 'Trusted results.',
+  'home.heroBody': 'Build an exam, add its questions, and publish it when it is ready.',
 } satisfies Record<string, string>;
 
 export type TranslationKey = keyof typeof en;

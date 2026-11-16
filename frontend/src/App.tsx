@@ -6,7 +6,6 @@ import { Layout } from './components/Layout';
 import { PageLoader } from './components/Feedback';
 import { AdminLayout, ProfileLayout, StudentLayout } from './components/RoleLayout';
 import { LanguageProvider, useI18n } from './i18n/LanguageContext';
-import { LanguageToggle } from './i18n/LanguageToggle';
 import { AdminAccountDetailPage } from './pages/AdminAccountDetailPage';
 import { AdminAccountsPage } from './pages/AdminAccountsPage';
 import { AdminCreateInstructorPage } from './pages/AdminCreateInstructorPage';
@@ -24,19 +23,17 @@ import { LoginPage } from './pages/LoginPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { RegisterPage } from './pages/RegisterPage';
 import { StudentHomePage } from './pages/StudentHomePage';
+import { AuthShell } from './components/AuthShell';
 
 function NotFoundPage() {
   const { t } = useI18n();
   return (
-    <main className="auth-page">
-      <div className="card auth-card">
-        <div className="auth-toolbar">
-          <LanguageToggle />
-        </div>
+    <AuthShell>
+      <div className="auth-card">
         <h1>{t('notFound.title')}</h1>
         <Link to="/">{t('notFound.link')}</Link>
       </div>
-    </main>
+    </AuthShell>
   );
 }
 

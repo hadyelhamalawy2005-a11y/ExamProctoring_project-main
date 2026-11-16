@@ -3,10 +3,10 @@ import { Link, Navigate, useLocation } from 'react-router-dom';
 import { describeError } from '../api/errors';
 import { Alert, PageLoader } from '../components/Feedback';
 import { useI18n } from '../i18n/LanguageContext';
-import { LanguageToggle } from '../i18n/LanguageToggle';
 import type { Role } from '../types/api';
 import { useAuth } from './AuthContext';
 import { homeFor } from './roles';
+import { AuthShell } from '../components/AuthShell';
 
 // The session could not be restored because the server could not answer (network error, 429 or 5xx). The stored session
 // is kept: the user can try again or sign out.
@@ -15,11 +15,8 @@ function SessionUnavailable() {
   const { t } = i18n;
   const { restoreError, retryRestore, signOut } = useAuth();
   return (
-    <main className="auth-page">
-      <div className="card auth-card form">
-        <div className="auth-toolbar">
-          <LanguageToggle />
-        </div>
+    <AuthShell>
+      <div className="auth-card form">
         <h1>{t('session.unavailableTitle')}</h1>
         <p className="muted">{t('session.unavailableBody')}</p>
         <Alert tone="error">{describeError(restoreError, i18n)}</Alert>
@@ -30,7 +27,7 @@ function SessionUnavailable() {
           {t('common.signOut')}
         </button>
       </div>
-    </main>
+    </AuthShell>
   );
 }
 
@@ -57,11 +54,8 @@ export function RequireRole({ roles, children }: { roles: readonly Role[]; child
     const area = roles[0];
     const email = '\u2066' + session.user.email + '\u2069';
     return (
-      <main className="auth-page">
-        <div className="card auth-card">
-          <div className="auth-toolbar">
-            <LanguageToggle />
-          </div>
+      <AuthShell>
+        <div className="auth-card">
           <h1>{t(area === 'Admin' ? 'access.adminTitle' : area === 'Student' ? 'access.studentTitle' : 'access.title')}</h1>
           <p>
             {area === 'Instructor'
@@ -78,7 +72,7 @@ export function RequireRole({ roles, children }: { roles: readonly Role[]; child
             </button>
           </div>
         </div>
-      </main>
+      </AuthShell>
     );
   }
 

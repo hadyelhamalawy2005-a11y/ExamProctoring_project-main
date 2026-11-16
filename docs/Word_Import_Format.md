@@ -54,6 +54,33 @@ Model Answer: RAM is fast temporary memory; storage keeps data permanently.
 Multiple-choice questions need **at least 2 options** and at most the server's maximum (default 8; the dashboard's manual form
 has the same limits). An essay question has no options.
 
+**Single and multiple correct answers (one MCQ type).** Every choice question is an MCQ. List one correct option for a
+single-answer question and several, separated by commas, for a multiple-answer question; spaces around the commas do not
+matter. The number of correct options decides how a student answers (one → pick one, several → pick all that apply). There is no
+separate "Multiple" type.
+
+```
+Question 1 [MCQ]                     Question 2 [MCQ]                     Question 3 [Short]
+Which layer routes packets?          Which are prime numbers?             Explain recursion.
+A. Physical                          A. 2                                 Model Answer: A function that calls itself.
+B. Network                           B. 4                                 Marks: 5
+C. Transport                         C. 5
+Correct Answer: B                    D. 9
+Marks: 1                             Correct Answer: A, C
+                                     Marks: 2
+```
+
+The type can be written in brackets after the question number: `[MCQ]` for a choice question, `[Short]` (or `[Essay]`) for a
+written answer with a `Model Answer:`. Every entry of `A, C` is checked on its own: an entry that is not an option letter (or the
+exact text of an option), an empty entry (`A,,C`) and a repeated entry (`A, A`) are reported, and nothing is marked correct
+until the list is valid. Several `Correct Answer:` lines are still refused; put all correct options on one line. Marking options
+with `*` or `✓` also works, and must agree with the `Correct Answer:` line when both are given. Correct options are never
+inferred.
+
+**Difficulty and Topic are not part of the format.** Older documents may still contain `Difficulty: Easy` or `Topic: Networking`
+lines. They are skipped silently (no warning), never added to a question, an option or a model answer, and no difficulty or
+topic is stored.
+
 **How the question type is decided.** An explicit marker (`Type:`, `(Essay)`, `Essay Q3:`) wins. Otherwise a question with options
 is multiple choice. A question without options takes the type of the heading above it (an `Essay` heading → essay; a
 `Multiple Choice` heading → still multiple choice, so missing options are reported). With no heading, a question that has no
@@ -70,7 +97,7 @@ The backend reports each problem against its question (`Question 2: the correct 
 - missing question text, missing or unknown type
 - fewer than 2 options, more than the maximum, a missing option text
 - repeated or out-of-order option labels (`A, A` / `A, C`)
-- missing correct answer, an answer that is not an existing option letter (`E`, `Paris`, `A, B`), more than one answer line
+- missing correct answer, an entry of the answer list that is not an existing option (`E`, `A, E`, `Paris`), an empty or repeated entry (`A,,C`, `A, A`), more than one answer line
 - invalid or repeated points
 - a line that belongs nowhere (a warning, not an error)
 - an answer that names no option, two different correct answers (answer lines and marks that disagree)

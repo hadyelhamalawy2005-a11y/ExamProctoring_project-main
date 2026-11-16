@@ -12,9 +12,15 @@ public static class QuestionRules
     // D31: marks have at most two decimal places.
     public const int MarksDecimalPlaces = 2;
 
-    // An MCQ has exactly one correct option; True/False is a two-option MCQ (§2.2).
-    public static bool HasExactlyOneCorrectOption(IEnumerable<QuestionOption> options) =>
-        options.Count(option => option.IsCorrect) == 1;
+    // An MCQ has at least one correct option. One correct option means a single-answer question; more than one means a
+    // multiple-answer question. Both are the same MCQ type: the number of correct options decides. True/False is a
+    // two-option MCQ (§2.2).
+    public static bool HasAtLeastOneCorrectOption(IEnumerable<QuestionOption> options) =>
+        options.Any(option => option.IsCorrect);
+
+    // True when students must be allowed to pick several options (checkboxes instead of radio buttons).
+    public static bool AllowsMultipleAnswers(IEnumerable<QuestionOption> options) =>
+        options.Count(option => option.IsCorrect) > 1;
 
     // D32: at least two options.
     public static bool HasEnoughOptions(IEnumerable<QuestionOption> options) =>
@@ -40,7 +46,7 @@ public static class QuestionRules
     // has no valid options.
     public static bool OptionsAreValid(QuestionType type, IReadOnlyCollection<QuestionOption> options) => type switch
     {
-        QuestionType.Mcq => HasEnoughOptions(options) && HasExactlyOneCorrectOption(options) && HasDistinctOptionTexts(options),
+        QuestionType.Mcq => HasEnoughOptions(options) && HasAtLeastOneCorrectOption(options) && HasDistinctOptionTexts(options),
         QuestionType.Essay => HasNoOptions(options),
         _ => false,
     };

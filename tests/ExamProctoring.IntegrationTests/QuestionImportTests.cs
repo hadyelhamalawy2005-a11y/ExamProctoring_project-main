@@ -274,7 +274,7 @@ public sealed class QuestionImportTests(ApiFactory factory)
 
         using var problem = await AssertProblemAsync(response, HttpStatusCode.BadRequest, ErrorCodes.ValidationFailed);
         Assert.Equal("Option text is required.", FieldError(problem, "questions[1].options[1].text"));
-        Assert.Equal("An MCQ question needs exactly one correct option.", FieldError(problem, "questions[2].options"));
+        Assert.Equal("An MCQ question needs at least one correct option.", FieldError(problem, "questions[2].options"));
         Assert.DoesNotContain(problem.RootElement.GetProperty("errors").EnumerateObject(), p => p.Name.StartsWith("questions[0]", StringComparison.Ordinal));
         Assert.Empty(await StoredQuestionsAsync(exam.Id));
     }

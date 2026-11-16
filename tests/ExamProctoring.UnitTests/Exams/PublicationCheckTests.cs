@@ -35,7 +35,7 @@ public sealed class PublicationCheckTests
         var third = Mcq(3, ("A", true), ("B", true));
         var second = Mcq(2, ("A", false), ("B", false));
 
-        Assert.Equal("Question 2 needs exactly one correct option.",
+        Assert.Equal("Question 2 needs at least one correct option.",
             PublicationCheck.FirstProblem([third.Question, second.Question], [.. third.Options, .. second.Options], maxMcqOptions: 8));
     }
 
@@ -43,7 +43,7 @@ public sealed class PublicationCheckTests
     public void EachRule_HasItsOwnMessage()
     {
         Assert.Equal("Question 1 needs at least 2 options.", Problem(Mcq(1, ("Only", true))));
-        Assert.Equal("Question 1 needs exactly one correct option.", Problem(Mcq(1, ("A", true), ("B", true))));
+        Assert.Equal("Question 1 needs at least one correct option.", Problem(Mcq(1, ("A", false), ("B", false))));
         Assert.Equal("Question 1 repeats an option text.", Problem(Mcq(1, ("Paris", true), (" paris", false))));
         Assert.Equal("Question 1 has an option without text.", Problem(Mcq(1, ("A", true), ("  ", false))));
         Assert.Equal("Question 1 has an option longer than 1000 characters.", Problem(Mcq(1, ("A", true), (new string('o', 1001), false))));

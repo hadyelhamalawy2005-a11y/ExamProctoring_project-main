@@ -16,19 +16,20 @@ interface OptionDraft {
 
 interface QuestionFormProps {
   question?: Question; // edit mode when present
+  lockedType?: QuestionType; // a new question whose type was already chosen: the type field is not shown again
   onSubmit(request: QuestionRequest): Promise<void>;
   onCancel(): void;
 }
 
 // One form for create and replace (QuestionRequest). The whole question is sent each time, with all of its options in
 // display order; the backend replaces the stored options and gives them new ids.
-export function QuestionForm({ question, onSubmit, onCancel }: QuestionFormProps) {
+export function QuestionForm({ question, lockedType, onSubmit, onCancel }: QuestionFormProps) {
   const i18n = useI18n();
   const { t, formatNumber } = i18n;
   const nextKey = useRef(0);
   const newOption = (text = '', isCorrect = false): OptionDraft => ({ key: nextKey.current++, text, isCorrect });
 
-  const [type, setType] = useState<QuestionType>(question?.type ?? 'Mcq');
+  const [type, setType] = useState<QuestionType>(question?.type ?? lockedType ?? 'Mcq');
   const [text, setText] = useState(question?.text ?? '');
   const [marks, setMarks] = useState(question ? question.marks.toFixed(2) : '1');
   const [modelAnswer, setModelAnswer] = useState(question?.modelAnswer ?? '');
@@ -43,8 +44,9 @@ export function QuestionForm({ question, onSubmit, onCancel }: QuestionFormProps
 
   const setOptionText = (key: number, value: string) =>
     setOptions((previous) => previous.map((option) => (option.key === key ? { ...option, text: value } : option)));
-  const markCorrect = (key: number) =>
-    setOptions((previous) => previous.map((option) => ({ ...option, isCorrect: option.key === key })));
+  // One MCQ editor for both kinds: tick one option for a single-answer question, several for a multiple-answer question.
+  const toggleCorrect = (key: number) =>
+    setOptions((previous) => previous.map((option) => (option.key === key ? { ...option, isCorrect: !option.isCorrect } : option)));
   const removeOption = (key: number) => setOptions((previous) => previous.filter((option) => option.key !== key));
 
   const validate = (): FieldErrors => validateQuestionDraft({ type, text, marks, modelAnswer, options });
@@ -89,18 +91,20 @@ export function QuestionForm({ question, onSubmit, onCancel }: QuestionFormProps
       {formError && <Alert tone="error">{describeError(formError.cause, i18n)}</Alert>}
 
       <div className="form-row">
-        <FormField id={`${idPrefix}-type`} label={t('qform.type')} error={errors.type}>
-          <select
-            id={`${idPrefix}-type`}
-            value={type}
-            onChange={(event) => setType(event.target.value as QuestionType)}
-            aria-invalid={Boolean(errors.type)}
-            aria-describedby={describedBy(`${idPrefix}-type`, errors.type)}
-          >
-            <option value="Mcq">{t('qform.typeMcq')}</option>
-            <option value="Essay">{t('qform.typeEssay')}</option>
-          </select>
-        </FormField>
+        {!lockedType && (
+          <FormField id={`${idPrefix}-type`} label={t('qform.type')} error={errors.type}>
+            <select
+              id={`${idPrefix}-type`}
+              value={type}
+              onChange={(event) => setType(event.target.value as QuestionType)}
+              aria-invalid={Boolean(errors.type)}
+              aria-describedby={describedBy(`${idPrefix}-type`, errors.type)}
+            >
+              <option value="Mcq">{t('qform.typeMcq')}</option>
+              <option value="Essay">{t('qform.typeEssay')}</option>
+            </select>
+          </FormField>
+        )}
         <FormField id={`${idPrefix}-marks`} label={t('qform.marks')} error={errors.marks} hint={t('qform.marksHint')}>
           <input
             id={`${idPrefix}-marks`}
@@ -140,10 +144,9 @@ export function QuestionForm({ question, onSubmit, onCancel }: QuestionFormProps
             return (
               <div key={option.key} className={`option-row ${optionError ? 'field-invalid' : ''}`}>
                 <input
-                  type="radio"
-                  name={`${idPrefix}-correct`}
+                  type="checkbox"
                   checked={option.isCorrect}
-                  onChange={() => markCorrect(option.key)}
+                  onChange={() => toggleCorrect(option.key)}
                   aria-label={t('qform.optionCorrect', { n: number })}
                 />
                 <input
@@ -182,6 +185,9 @@ export function QuestionForm({ question, onSubmit, onCancel }: QuestionFormProps
             {t('qform.addOption')}
           </button>
           <p className="field-hint">{t('qform.optionsHint', { min: formatNumber(LIMITS.minMcqOptions) })}</p>
+          <p className="field-hint" data-testid="answer-mode">
+            {options.filter((option) => option.isCorrect).length > 1 ? t('qform.modeMultiple') : t('qform.modeSingle')}
+          </p>
         </fieldset>
       )}
 

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { register } from '../api/auth';
 import { ApiError, describeError } from '../api/errors';
+import { landingFor } from '../auth/roles';
 import { useAuth } from '../auth/AuthContext';
 import { Alert } from '../components/Feedback';
 import { FormField, describedBy } from '../components/FormField';
@@ -26,7 +27,7 @@ export function RegisterPage() {
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState(false);
 
-  if (session) return <Navigate to="/exams" replace />;
+  if (session) return <Navigate to={landingFor(session.user.role, undefined)} replace />;
 
   const update = (field: keyof RegisterFormValues) => (value: string) => {
     setValues((previous) => ({ ...previous, [field]: value }));

@@ -5,19 +5,21 @@ interface PaginationProps {
   pageSize: number;
   totalCount: number;
   onPageChange(page: number): void;
+  label?: string; // the nav's accessible name (default: the exam list)
+  noneText?: string; // shown when there are no results
 }
 
-export function Pagination({ page, pageSize, totalCount, onPageChange }: PaginationProps) {
+export function Pagination({ page, pageSize, totalCount, onPageChange, label, noneText }: PaginationProps) {
   const { t, formatNumber } = useI18n();
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
   const first = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const last = Math.min(page * pageSize, totalCount);
 
   return (
-    <nav className="pagination" aria-label={t('pagination.label')}>
+    <nav className="pagination" aria-label={label ?? t('pagination.label')}>
       <span className="pagination-summary">
         {totalCount === 0
-          ? t('pagination.none')
+          ? (noneText ?? t('pagination.none'))
           : t('pagination.summary', { first: formatNumber(first), last: formatNumber(last), total: formatNumber(totalCount) })}
       </span>
       <div className="pagination-buttons">

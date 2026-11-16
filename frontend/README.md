@@ -131,3 +131,15 @@ Set `VITE_API_BASE_URL=http://localhost:5168` (or `https://localhost:7046` with 
 Exam times are entered and shown in the browser's local time zone.
 - **Sending:** the start time is sent with the local offset, for example `2026-11-01T09:00:00+03:00`. The backend requires an explicit offset and stores UTC.
 - **Receiving:** responses are in UTC and are displayed in local time.
+
+## Roles and routes (unified web app)
+
+One sign-in for every role. The role comes from the backend's token response (never from browser storage), and
+`RequireRole` in `src/auth/ProtectedRoute.tsx` guards each area. After sign-in each role lands on its own dashboard
+(`src/auth/roles.ts`); the backend still enforces the role on every request.
+
+| Role | Routes | Backend used |
+|---|---|---|
+| Administrator | `/admin/accounts`, `/admin/accounts/:id`, `/admin/instructors/new` | `GET /api/admin/accounts`, `GET /api/admin/accounts/{id}`, `POST /api/admin/instructors`, `POST /api/admin/accounts/{id}/temporary-password`, `.../deactivate`, `.../reactivate` |
+| Instructor | `/exams`, `/exams/new`, `/exams/:id`, `/exams/:id/edit`, `/exams/:id/preview`, `/import` (`/instructor` redirects to the exam list) | the exam and question endpoints above |
+| Student | `/student` (placeholder only) | none: the backend has no student exam endpoints |

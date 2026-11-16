@@ -115,14 +115,14 @@ describe('language switching in the running app', () => {
   it('switches to English and back immediately, keeps the page and the session, and stores only the language code', async () => {
     signInInstructor();
     const user = userEvent.setup();
-    renderApp('/exams');
-    await screen.findByRole('heading', { name: ar['list.title'] });
+    renderApp('/profile');
+    await screen.findByRole('heading', { name: ar['nav.profile'] });
     const toggle = screen.getByRole('group', { name: ar['lang.label'] });
 
     await user.click(within(toggle).getByRole('button', { name: 'English' }));
 
-    expect(screen.getByRole('heading', { name: en['list.title'] })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Midterm' })).toBeInTheDocument(); // user content is untouched
+    expect(screen.getByRole('heading', { name: en['nav.profile'] })).toBeInTheDocument();
+    expect(screen.getByText('Test Instructor')).toBeInTheDocument(); // user content is untouched
     expect(document.documentElement.lang).toBe('en');
     expect(document.documentElement.dir).toBe('ltr');
     expect(window.localStorage.getItem('lang')).toBe('en');
@@ -131,7 +131,7 @@ describe('language switching in the running app', () => {
     expect(JSON.stringify({ ...window.localStorage })).not.toMatch(/access-1|refresh-1/);
 
     await user.click(within(screen.getByRole('group', { name: en['lang.label'] })).getByRole('button', { name: 'العربية' }));
-    expect(screen.getByRole('heading', { name: ar['list.title'] })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: ar['nav.profile'] })).toBeInTheDocument();
     expect(document.documentElement.dir).toBe('rtl');
   });
 
@@ -154,11 +154,11 @@ describe('language switching in the running app', () => {
     });
     signInInstructor();
     const user = userEvent.setup();
-    renderApp('/exams');
+    renderApp('/profile');
 
-    expect(await screen.findByRole('heading', { name: ar['list.title'] })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: ar['nav.profile'] })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'English' }));
-    expect(screen.getByRole('heading', { name: en['list.title'] })).toBeInTheDocument(); // the choice works for this visit
+    expect(screen.getByRole('heading', { name: en['nav.profile'] })).toBeInTheDocument(); // the choice works for this visit
   });
 
   it('formats the exam start in the active language', async () => {
@@ -166,12 +166,15 @@ describe('language switching in the running app', () => {
     signInInstructor();
     const user = userEvent.setup();
     renderApp('/exams');
-    await screen.findByRole('link', { name: 'Midterm' });
-    const row = screen.getByRole('link', { name: 'Midterm' }).closest('tr')!;
-    expect(within(row).getByText(/Jan/)).toBeInTheDocument();
+    const card = (await screen.findByRole('link', { name: /Midterm/ }));
+    expect(within(card).getByText(/Jan/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'العربية' }));
-    expect(within(row).getByText(/يناير/)).toBeInTheDocument();
+    // Switch the language on the profile screen, then come back to the list.
+    await user.click(screen.getByRole('link', { name: 'Profile' }));
+    await user.click(await screen.findByRole('button', { name: 'العربية' }));
+    await user.click(screen.getByRole('link', { name: ar['nav.exams'] }));
+    const arabicCard = await screen.findByRole('link', { name: /Midterm/ });
+    expect(within(arabicCard).getByText(/يناير/)).toBeInTheDocument();
   });
 });
 

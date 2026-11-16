@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ApiError, describeError } from '../api/errors';
 import { createQuestion, deleteQuestion, listQuestions, updateQuestion } from '../api/questions';
 import { useLoader } from '../hooks/useLoader';
 import { useI18n } from '../i18n/LanguageContext';
 import type { TranslationKey } from '../i18n/en';
-import type { Exam, Question, QuestionRequest } from '../types/api';
+import { getExtras, newLocalId, removeCodeQuestion, saveExtras, upsertCodeQuestion, type ExamExtras, type QuestionMethod } from '../local/examExtras';
+import type { Exam, Question, QuestionRequest, QuestionType } from '../types/api';
+import { emptyCodeQuestion, type CodeQuestion } from '../types/code';
+import { CodeQuestionForm } from './CodeQuestionForm';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Alert, EmptyState, Spinner } from './Feedback';
+import { MarksPlanner } from './MarksPlanner';
 import { QuestionForm } from './QuestionForm';
 
 interface QuestionsPanelProps {
@@ -17,6 +21,8 @@ interface QuestionsPanelProps {
 }
 
 // What the last write produced. Errors are kept as errors (not text) so they follow the active language.
+type NewKind = QuestionType | 'Code';
+
 type Outcome = { tone: 'success'; text: TranslationKey } | { tone: 'error'; error: unknown };
 
 // Questions can be read at any time. Writes are allowed only while the exam is Draft or Published and has not started;
@@ -29,6 +35,12 @@ export function QuestionsPanel({ exam, onExamStale }: QuestionsPanelProps) {
   const [toDelete, setToDelete] = useState<Question | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const navigate = useNavigate();
+  // Browser-only settings of this exam (see local/examExtras.ts): how questions are entered, and the code questions.
+  const [extras, setExtras] = useState<ExamExtras>(() => getExtras(exam.id));
+  const [newKind, setNewKind] = useState<NewKind>('Mcq');
+  const [editingCode, setEditingCode] = useState<CodeQuestion | null>(null);
+  const [codeToDelete, setCodeToDelete] = useState<CodeQuestion | null>(null);
 
   const editable = exam.phase === 'Upcoming' && exam.status !== 'Cancelled';
   const twoDecimals = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
@@ -71,7 +83,32 @@ export function QuestionsPanel({ exam, onExamStale }: QuestionsPanelProps) {
   };
 
   const items = questions.data?.items ?? [];
-  const totalMarks = items.reduce((sum, question) => sum + question.marks, 0);
+  const codeQuestions = extras.codeQuestions;
+  const totalMarks = items.reduce((sum, question) => sum + question.marks, 0) + codeQuestions.reduce((sum, question) => sum + question.marks, 0);
+  const questionCount = items.length + codeQuestions.length;
+
+  const chooseMethod = (chosen: QuestionMethod) => {
+    setExtras(saveExtras(exam.id, { method: chosen }));
+    if (chosen === 'word') navigate(`/import?examId=${encodeURIComponent(exam.id)}`);
+    else setEditing('new');
+  };
+
+  const saveCode = (question: CodeQuestion) => {
+    setExtras(upsertCodeQuestion(exam.id, question));
+    setEditingCode(null);
+    setEditing(null);
+    setOutcome({ tone: 'success', text: 'questions.saved' });
+  };
+
+  const confirmDeleteCode = () => {
+    if (!codeToDelete) return;
+    setExtras(removeCodeQuestion(exam.id, codeToDelete.id));
+    setCodeToDelete(null);
+    setOutcome({ tone: 'success', text: 'questions.deleted' });
+  };
+
+  // The method is chosen once. Until then (and only for an exam with no questions) the choice is offered.
+  const method = extras.method ?? (questionCount > 0 ? 'manual' : null);
 
   return (
     <section className="card" aria-labelledby="questions-heading">
@@ -81,23 +118,47 @@ export function QuestionsPanel({ exam, onExamStale }: QuestionsPanelProps) {
           {questions.data && (
             <p className="muted">
               {t('questions.summary', {
-                count: items.length === 1 ? t('questions.countOne', { n: 1 }) : t('questions.countMany', { n: formatNumber(items.length) }),
+                count: questionCount === 1 ? t('questions.countOne', { n: 1 }) : t('questions.countMany', { n: formatNumber(questionCount) }),
                 marks: formatNumber(totalMarks, twoDecimals),
               })}
             </p>
           )}
         </div>
-        {editable && editing !== 'new' && (
-          <div className="button-row">
-            <Link className="button button-secondary" to={`/import?examId=${encodeURIComponent(exam.id)}`}>
-              {t('nav.import')}
-            </Link>
-            <button type="button" className="button" onClick={() => setEditing('new')}>
-              {t('questions.add')}
-            </button>
-          </div>
-        )}
+        <div className="button-row">
+          <Link className="button button-secondary" to={`/exams/${encodeURIComponent(exam.id)}/preview`}>
+            {t('preview.action')}
+          </Link>
+          {editable && editing !== 'new' && method !== null && (
+            <>
+              {method === 'word' ? (
+                <Link className="button" to={`/import?examId=${encodeURIComponent(exam.id)}`}>
+                  {t('nav.import')}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  className="button"
+                  onClick={() => {
+                    setNewKind('Mcq');
+                    setEditing('new');
+                  }}
+                >
+                  {t('questions.add')}
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
+
+      {editable && method !== null && editing !== 'new' && (
+        <p className="muted method-note">
+          {method === 'word' ? t('method.usingWord') : t('method.usingManual')}{' '}
+          <button type="button" className="link-button" onClick={() => setExtras(saveExtras(exam.id, { method: method === 'word' ? 'manual' : 'word' }))}>
+            {method === 'word' ? t('method.switchManual') : t('method.switchWord')}
+          </button>
+        </p>
+      )}
 
       {!editable && (
         <p className="muted">{exam.status === 'Cancelled' ? t('questions.readOnlyCancelled') : t('questions.readOnlyStarted')}</p>
@@ -109,10 +170,42 @@ export function QuestionsPanel({ exam, onExamStale }: QuestionsPanelProps) {
         </Alert>
       )}
 
+      {editable && method === null && !questions.loading && editing !== 'new' && (
+        <div className="method-chooser" role="group" aria-labelledby="method-heading">
+          <h3 id="method-heading">{t('method.title')}</h3>
+          <p className="muted">{t('method.intro')}</p>
+          <div className="button-row">
+            <button type="button" className="button" onClick={() => chooseMethod('manual')}>
+              {t('method.manual')}
+            </button>
+            <button type="button" className="button button-secondary" onClick={() => chooseMethod('word')}>
+              {t('method.word')}
+            </button>
+          </div>
+        </div>
+      )}
+
       {editing === 'new' && (
         <div className="question-editor">
           <h3>{t('questions.newHeading')}</h3>
-          <QuestionForm onSubmit={(request) => save(request)} onCancel={() => setEditing(null)} />
+          <div className="type-picker" role="group" aria-label={t('qform.type')}>
+            {(['Mcq', 'Essay', 'Code'] as const).map((kind) => (
+              <button
+                key={kind}
+                type="button"
+                className={`button ${newKind === kind ? '' : 'button-secondary'}`}
+                aria-pressed={newKind === kind}
+                onClick={() => setNewKind(kind)}
+              >
+                {t(`questions.type${kind}`)}
+              </button>
+            ))}
+          </div>
+          {newKind === 'Code' ? (
+            <CodeQuestionForm question={emptyCodeQuestion(newLocalId())} onSubmit={saveCode} onCancel={() => setEditing(null)} />
+          ) : (
+            <QuestionForm key={newKind} lockedType={newKind} onSubmit={(request) => save(request)} onCancel={() => setEditing(null)} />
+          )}
         </div>
       )}
 
@@ -126,7 +219,7 @@ export function QuestionsPanel({ exam, onExamStale }: QuestionsPanelProps) {
         </Alert>
       )}
 
-      {questions.data && items.length === 0 && editing !== 'new' && (
+      {questions.data && questionCount === 0 && editing !== 'new' && method !== null && (
         <EmptyState title={t('questions.emptyTitle')}>
           <p>{editable ? t('questions.emptyEditable') : t('questions.emptyReadOnly')}</p>
         </EmptyState>
@@ -144,6 +237,9 @@ export function QuestionsPanel({ exam, onExamStale }: QuestionsPanelProps) {
               <div className="question-head">
                 <span className="question-number">Q{formatNumber(question.position)}</span>
                 <span className="badge badge-neutral">{question.type === 'Mcq' ? t('questions.typeMcq') : t('questions.typeEssay')}</span>
+                {question.type === 'Mcq' && question.options.filter((option) => option.isCorrect).length > 1 && (
+                  <span className="muted">{t('questions.multipleAnswers')}</span>
+                )}
                 <span className="question-marks">{t('questions.marks', { marks: formatNumber(question.marks, twoDecimals) })}</span>
               </div>
               <p className="question-text" dir="auto">
@@ -179,6 +275,68 @@ export function QuestionsPanel({ exam, onExamStale }: QuestionsPanelProps) {
           ),
         )}
       </ol>
+
+      {codeQuestions.length > 0 && (
+        <div className="code-questions">
+          <h3>{t('questions.codeHeading')}</h3>
+          <p className="muted">{t('code.localNotice')}</p>
+          <ol className="question-list" start={items.length + 1}>
+            {codeQuestions.map((question) =>
+              editingCode?.id === question.id ? (
+                <li key={question.id} className="question-item question-editor">
+                  <CodeQuestionForm question={editingCode} onSubmit={saveCode} onCancel={() => setEditingCode(null)} />
+                </li>
+              ) : (
+                <li key={question.id} className="question-item">
+                  <div className="question-head">
+                    <span className="badge badge-neutral">{t('questions.typeCode')}</span>
+                    <span className="question-marks">{t('questions.marks', { marks: formatNumber(question.marks, twoDecimals) })}</span>
+                    <span className="badge badge-neutral">{question.evaluation === 'ai' ? t('code.eval.ai') : t('code.eval.manual')}</span>
+                  </div>
+                  <p className="question-text" dir="auto">
+                    {question.text}
+                  </p>
+                  {editable && (
+                    <div className="button-row">
+                      <button type="button" className="button button-secondary button-small" onClick={() => setEditingCode(question)}>
+                        {t('questions.edit')}
+                      </button>
+                      <button type="button" className="button button-danger-outline button-small" onClick={() => setCodeToDelete(question)}>
+                        {t('common.delete')}
+                      </button>
+                    </div>
+                  )}
+                </li>
+              ),
+            )}
+          </ol>
+        </div>
+      )}
+
+      {editable && questions.data && questionCount > 0 && (
+        <MarksPlanner
+          examId={exam.id}
+          questions={items}
+          codeQuestions={codeQuestions}
+          totalMarks={extras.totalMarks}
+          onTotalChange={(total) => setExtras(saveExtras(exam.id, { totalMarks: total }))}
+          onSaved={() => {
+            setExtras(getExtras(exam.id));
+            questions.reload();
+          }}
+        />
+      )}
+
+      <ConfirmDialog
+        open={codeToDelete !== null}
+        title={t('questions.deleteTitle')}
+        confirmLabel={t('common.delete')}
+        tone="danger"
+        onConfirm={confirmDeleteCode}
+        onCancel={() => setCodeToDelete(null)}
+      >
+        <p>{t('questions.deleteCodeBody')}</p>
+      </ConfirmDialog>
 
       <ConfirmDialog
         open={toDelete !== null}

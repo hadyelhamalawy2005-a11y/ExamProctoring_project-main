@@ -2,18 +2,33 @@ using ExamProctoring.Domain.Exams;
 
 namespace ExamProctoring.UnitTests.Exams;
 
-// An MCQ has at least two options with distinct texts and exactly one correct option (§2.2, §5.3, D32); an Essay has
+// An MCQ has at least two options with distinct texts and at least one correct option (§2.2, §5.3, D32); an Essay has
 // no options (§5.2, confirmed 2026-10-21); marks are greater than 0, at most 9999.99, with two decimals at most (D31, D35).
 public sealed class QuestionRulesTests
 {
     [Theory]
     [InlineData(new[] { true, false })]
     [InlineData(new[] { false, true, false, false })]
-    public void Mcq_WithExactlyOneCorrectOption_IsValid(bool[] correct)
+    public void Mcq_WithOneCorrectOption_IsValid_AndSingleAnswer(bool[] correct)
     {
         var options = Options(correct);
 
-        Assert.True(QuestionRules.HasExactlyOneCorrectOption(options));
+        Assert.True(QuestionRules.HasAtLeastOneCorrectOption(options));
+        Assert.False(QuestionRules.AllowsMultipleAnswers(options));
+        Assert.True(QuestionRules.OptionsAreValid(QuestionType.Mcq, options));
+    }
+
+    // One MCQ type: several correct options make a multiple-answer question, not a different type.
+    [Theory]
+    [InlineData(new[] { true, true })]
+    [InlineData(new[] { true, false, true })]
+    [InlineData(new[] { true, true, true, false })]
+    public void Mcq_WithSeveralCorrectOptions_IsValid_AndMultipleAnswer(bool[] correct)
+    {
+        var options = Options(correct);
+
+        Assert.True(QuestionRules.HasAtLeastOneCorrectOption(options));
+        Assert.True(QuestionRules.AllowsMultipleAnswers(options));
         Assert.True(QuestionRules.OptionsAreValid(QuestionType.Mcq, options));
     }
 
@@ -21,13 +36,11 @@ public sealed class QuestionRulesTests
     [InlineData(new bool[0])]
     [InlineData(new[] { false })]
     [InlineData(new[] { false, false })]
-    [InlineData(new[] { true, true })]
-    [InlineData(new[] { true, false, true })]
-    public void Mcq_WithoutExactlyOneCorrectOption_IsInvalid(bool[] correct)
+    public void Mcq_WithoutACorrectOption_IsInvalid(bool[] correct)
     {
         var options = Options(correct);
 
-        Assert.False(QuestionRules.HasExactlyOneCorrectOption(options));
+        Assert.False(QuestionRules.HasAtLeastOneCorrectOption(options));
         Assert.False(QuestionRules.OptionsAreValid(QuestionType.Mcq, options));
     }
 
@@ -37,7 +50,7 @@ public sealed class QuestionRulesTests
     {
         var options = Options([true]);
 
-        Assert.True(QuestionRules.HasExactlyOneCorrectOption(options));
+        Assert.True(QuestionRules.HasAtLeastOneCorrectOption(options));
         Assert.False(QuestionRules.HasEnoughOptions(options));
         Assert.False(QuestionRules.OptionsAreValid(QuestionType.Mcq, options));
     }

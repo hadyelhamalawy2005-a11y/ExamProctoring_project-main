@@ -6,7 +6,7 @@ namespace ExamProctoring.UnitTests.Exams;
 
 // Question create and replace fields (D31, D32, D35): type Mcq or Essay; text 1-4000 after trimming; marks greater than
 // 0, at most 9999.99, two decimals at most; model answer optional, at most 4000; an MCQ has 2 to Exams:MaxMcqOptions
-// options with exactly one correct and no repeated text; an Essay has none.
+// options with at least one correct and no repeated text; an Essay has none.
 public sealed class QuestionRequestValidatorTests
 {
     private readonly QuestionRequestValidator _validator = new(new Settings(maxMcqOptions: 8));
@@ -125,7 +125,7 @@ public sealed class QuestionRequestValidatorTests
 
         Assert.All(errors, e => Assert.Equal("Options", e.PropertyName));
         Assert.Equal(
-            new[] { "An MCQ question needs at least 2 options.", "An MCQ question needs exactly one correct option." },
+            new[] { "An MCQ question needs at least 2 options.", "An MCQ question needs at least one correct option." },
             errors.Select(e => e.ErrorMessage));
     }
 
@@ -146,12 +146,20 @@ public sealed class QuestionRequestValidatorTests
 
     [Theory]
     [InlineData(new[] { false, false })]
-    [InlineData(new[] { true, true })]
-    [InlineData(new[] { true, false, true })]
-    public void Mcq_WithoutExactlyOneCorrectOption_IsRejected(bool[] correct) =>
+    [InlineData(new[] { false, false, false })]
+    public void Mcq_WithoutACorrectOption_IsRejected(bool[] correct) =>
         AssertOnlyFieldFails(
             Mcq() with { Options = [.. correct.Select((isCorrect, i) => new QuestionOptionRequest($"Option {i + 1}", isCorrect))] },
-            "Options", "An MCQ question needs exactly one correct option.");
+            "Options", "An MCQ question needs at least one correct option.");
+
+    // A multiple-answer question is the same MCQ type with several correct options.
+    [Theory]
+    [InlineData(new[] { true, true })]
+    [InlineData(new[] { true, false, true })]
+    [InlineData(new[] { true, true, true })]
+    public void Mcq_WithSeveralCorrectOptions_IsAccepted(bool[] correct) =>
+        Assert.True(_validator.Validate(
+            Mcq() with { Options = [.. correct.Select((isCorrect, i) => new QuestionOptionRequest($"Option {i + 1}", isCorrect))] }).IsValid);
 
     [Fact]
     public void Mcq_OptionWithoutIsCorrect_CountsAsWrong() =>

@@ -118,7 +118,7 @@ export function validateQuestionDraft(values: QuestionDraftValues): FieldErrors 
       }
     });
     if (values.options.length < LIMITS.minMcqOptions) found.options = msg('val.optionsMin', { min: LIMITS.minMcqOptions });
-    else if (values.options.filter((option) => option.isCorrect).length !== 1) found.options = msg('val.optionsOneCorrect');
+    else if (!values.options.some((option) => option.isCorrect)) found.options = msg('val.optionsOneCorrect');
     else {
       const filled = values.options.map((option) => option.text).filter((value) => value.trim());
       const repeated = filled.some((value, index) => filled.findIndex((other) => sameOptionText(other, value)) !== index);
@@ -170,4 +170,26 @@ export function validateRegisterForm(values: RegisterFormValues): FieldErrors {
 
   if (values.confirmPassword !== values.password) errors.confirmPassword = msg('val.passwordsMismatch');
   return errors;
+}
+
+export const REASON_MAX = 500;
+
+// POST /api/admin/instructors: full name and email, with the same rules as student sign-up.
+export function validateInstructorForm(values: { fullName: string; email: string }): FieldErrors {
+  const errors: FieldErrors = {};
+  const name = values.fullName.trim();
+  if (!name) errors.fullName = msg('val.fullNameRequired');
+  else if (name.length > LIMITS.fullNameMax) errors.fullName = msg('val.fullNameMax', { max: LIMITS.fullNameMax });
+  else if (/\p{Cc}/u.test(values.fullName)) errors.fullName = msg('val.fullNameControl');
+
+  if (!values.email.trim()) errors.email = msg('val.emailRequired');
+  else if (!isValidEmail(values.email)) errors.email = msg('val.emailInvalid');
+  return errors;
+}
+
+// The status-change reason: required to deactivate, optional to reactivate, at most 500 characters after trimming.
+export function validateReason(reason: string, required: boolean): Msg | null {
+  const text = reason.trim();
+  if (!text) return required ? msg('val.reasonRequired') : null;
+  return text.length > REASON_MAX ? msg('val.reasonMax', { max: REASON_MAX }) : null;
 }

@@ -168,3 +168,62 @@ export interface ProblemDetails {
   code?: string;
   errors?: Record<string, string[]>;
 }
+
+// ---- Administration (Application/Accounts/*.cs). Admin endpoints list and manage Students and Instructors only. ----
+
+export type AccountStatus = 'Active' | 'Deactivated';
+export type ManagedRole = 'Student' | 'Instructor';
+
+// AccountSummaryResponse: one account in the list and in the detail view.
+export interface AccountSummary {
+  id: string;
+  fullName: string;
+  email: string;
+  role: ManagedRole;
+  accountStatus: AccountStatus;
+  mustChangePassword: boolean;
+  temporaryPasswordExpiresAt: string | null;
+  isLockedOut: boolean;
+  createdAt: string;
+  lastLoginAt: string | null;
+  statusChangedAt: string | null;
+  statusReason: string | null;
+}
+
+// AccountListResponse
+export interface AccountPage {
+  items: AccountSummary[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+}
+
+// GET /api/admin/accounts?role=&status=&page=&pageSize= (every value optional; pageSize 1-100, default 20)
+export interface AccountListParams {
+  role?: ManagedRole;
+  status?: AccountStatus;
+  page?: number;
+  pageSize?: number;
+}
+
+// POST /api/admin/instructors: exactly these two fields.
+export interface CreateInstructorRequest {
+  fullName: string;
+  email: string;
+}
+
+// 201 body. The only time the temporary password is returned.
+export interface CreateInstructorResponse {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  temporaryPassword: string;
+  temporaryPasswordExpiresAt: string;
+}
+
+// 200 body of POST /api/admin/accounts/{id}/temporary-password. The only time the password is returned.
+export interface TemporaryPasswordResponse {
+  temporaryPassword: string;
+  temporaryPasswordExpiresAt: string;
+}

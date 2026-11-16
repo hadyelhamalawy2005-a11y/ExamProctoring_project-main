@@ -44,6 +44,7 @@ public static class ImportIssueCodes
     public const string CorrectAnswerMissing = "correct_answer_missing";
     public const string CorrectAnswerInvalid = "correct_answer_invalid";
     public const string MultipleCorrectAnswers = "multiple_correct_answers";
+    public const string DuplicateCorrectAnswer = "duplicate_correct_answer";
     public const string PointsInvalid = "points_invalid";
     public const string DuplicatePoints = "duplicate_points";
     public const string DuplicateModelAnswer = "duplicate_model_answer";

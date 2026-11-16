@@ -97,6 +97,18 @@ public static partial class QuestionDocumentParser
     [GeneratedRegex(@"\s*[(\[]\s*(?<n>" + Number + @")\s*(?:" + PointsUnit + @")\s*[)\]]\s*$", Flags, 1000)]
     private static partial Regex PointsSuffix();
 
+    // Optional metadata lines of older documents. They are not part of the import format: they are skipped without a
+    // warning and never attached to a question, an option or a model answer.
+    [GeneratedRegex(@"^(?:difficulty|topic|الصعوبة|مستوى\s+الصعوبة|الموضوع)\s*[:：=\-–—]\s*.*$", Flags, 1000)]
+    private static partial Regex MetadataLine();
+
+    // The type written in brackets after the question number: "Question 1 [MCQ]", "Question 7 [Short]", "Question 3 [Essay]".
+    // "Short" (a short written answer) is the Essay type of the system. There is no separate multiple-answer type.
+    [GeneratedRegex(
+        @"^\s*[\[(]\s*(?<k>mcq|multiple[\s-]*choice|short(?:[\s-]*answer)?|essay|written|مقالي|اختيار\s+من\s+متعدد)\s*[\])]\s*",
+        Flags, 1000)]
+    private static partial Regex BracketTypeTag();
+
     [GeneratedRegex(@"^\s*[(\[]\s*(?:essay|مقالي)\s*[)\]]\s*", Flags, 1000)]
     private static partial Regex EssayMarkPrefix();
 
@@ -185,8 +197,15 @@ public static partial class QuestionDocumentParser
         {
             Finish();
             lastNumber = number;
+            var rest = text ?? string.Empty;
+            if (BracketTypeTag().Match(rest) is { Success: true } tag)
+            {
+                kind ??= KindOf(tag.Groups["k"].Value);
+                rest = rest[tag.Length..];
+            }
+
             current = new QuestionBuilder(number, line, sectionKind) { Kind = kind, KindSeen = kind is not null };
-            var first = TrimMarks(text ?? string.Empty);
+            var first = TrimMarks(rest);
             if (first.Length > 0)
                 current.TextLines.Add(first);
             current.Last = Target.Text;
@@ -239,6 +258,13 @@ public static partial class QuestionDocumentParser
                 && (current is null || (bareNumber == lastNumber + 1 && StartsHere(current, bare.Groups["t"].Value))))
             {
                 Start(bareNumber, source.Number, bare.Groups["t"].Value, null);
+                continue;
+            }
+
+            if (MetadataLine().IsMatch(text))
+            {
+                if (current is not null)
+                    current.Last = Target.None;
                 continue;
             }
 
@@ -305,7 +331,7 @@ public static partial class QuestionDocumentParser
             var kind = KindOf(value);
             if (kind is null)
                 Warn(q, ImportIssueCodes.UnknownType,
-                    $"Question {q.Number}: the type \"{Excerpt(value)}\" is not supported. Use \"Mcq\" or \"Essay\".", lineNumber, error: true);
+                    $"Question {q.Number}: the type \"{Excerpt(value)}\" is not supported. Use \"MCQ\" or \"Short\" (or \"Essay\").", lineNumber, error: true);
             q.Kind = kind;
             return;
         }
@@ -512,7 +538,7 @@ public static partial class QuestionDocumentParser
         }
 
         var isEssay = kind == Essay;
-        var correct = -1;
+        List<int> correct = [];
         string? modelAnswer = null;
 
         if (isEssay)
@@ -553,7 +579,7 @@ public static partial class QuestionDocumentParser
                 Warn(q, ImportIssueCodes.OptionLabelsOutOfOrder,
                     $"Question {q.Number}: the options must be labelled A, B, C ... in order (found {string.Join(", ", options.Select(o => o.Label))}).", q.Line, error: true);
 
-            correct = ResolveCorrectOption(q, options, out var resolved) ? resolved : -1;
+            correct = ResolveCorrectOptions(q, options, out var resolved) ? resolved : [];
 
             foreach (var extra in q.AnswerExtra)
                 Warn(q, ImportIssueCodes.UnexpectedLine,
@@ -566,7 +592,7 @@ public static partial class QuestionDocumentParser
         var marks = points ?? QuestionImportLimits.DefaultMarks;
         var imported = isEssay
             ? []
-            : options.Select((o, index) => new ImportedOption(o.Label, o.Text, index == correct)).ToList();
+            : options.Select((o, index) => new ImportedOption(o.Label, o.Text, correct.Contains(index))).ToList();
 
         return new ImportedQuestion(
             q.Number,
@@ -580,47 +606,92 @@ public static partial class QuestionDocumentParser
             q.Issues);
     }
 
-    // Finds the one correct option from the marks on options and the answer lines, reporting anything missing, invalid or in
-    // conflict. Returns false when no option can be named.
-    private static bool ResolveCorrectOption(QuestionBuilder q, List<(string Label, string Text, bool Marked)> options, out int index)
+    // Finds the correct options from the marks on options and the answer line, reporting anything missing, invalid or in
+    // conflict. One correct option makes a single-answer question, several make a multiple-answer question (written
+    // "Correct Answer: A, C"); nothing is ever inferred. Returns false when no valid set of options can be named.
+    private static bool ResolveCorrectOptions(QuestionBuilder q, List<(string Label, string Text, bool Marked)> options, out List<int> indexes)
     {
-        index = -1;
+        indexes = [];
         var marked = options.Select((o, i) => (o.Marked, i)).Where(x => x.Marked).Select(x => x.i).ToList();
 
-        if (marked.Count > 1 || q.Answers.Count > 1)
+        if (q.Answers.Count > 1)
         {
             Warn(q, ImportIssueCodes.MultipleCorrectAnswers,
-                $"Question {q.Number}: more than one correct answer is given. A question has exactly one.", q.Line, error: true);
+                $"Question {q.Number}: the correct answer is given on more than one line. Put all correct options on one line, for example \"Correct Answer: A, C\".",
+                q.Line, error: true);
             return false;
         }
 
-        var fromAnswer = -1;
-        if (q.Answers.Count == 1)
+        var fromAnswer = new List<int>();
+        if (q.Answers.Count == 1 && !TryResolveAnswerList(q, q.Answers[0].Value, q.Answers[0].Line, options, fromAnswer))
+            return false;
+
+        if (marked.Count > 0 && fromAnswer.Count > 0 && !marked.Order().SequenceEqual(fromAnswer.Order()))
         {
-            var (value, line) = q.Answers[0];
-            fromAnswer = FindOption(value, options);
-            if (fromAnswer < 0)
+            Warn(q, ImportIssueCodes.MultipleCorrectAnswers,
+                $"Question {q.Number}: the marked options and the \"Correct Answer\" line disagree.", q.Line, error: true);
+            return false;
+        }
+
+        indexes = (fromAnswer.Count > 0 ? fromAnswer : marked).Distinct().Order().ToList();
+        if (indexes.Count == 0)
+            Warn(q, ImportIssueCodes.CorrectAnswerMissing, $"Question {q.Number}: the correct answer is missing.", q.Line, error: true);
+        return indexes.Count > 0;
+    }
+
+    // "B", "A, C", "A,  C", "A، C": every entry is trimmed and checked on its own against the options. A value that is, as a
+    // whole, one option's letter or exact text ("Paris, France") is that one option; otherwise it is split at commas.
+    private static bool TryResolveAnswerList(
+        QuestionBuilder q, string value, int line, List<(string Label, string Text, bool Marked)> options, List<int> found)
+    {
+        var whole = FindOption(value, options);
+        if (whole >= 0)
+        {
+            found.Add(whole);
+            return true;
+        }
+
+        var parts = value.Split(',', '،');
+        if (parts.Length == 1)
+        {
+            Warn(q, ImportIssueCodes.CorrectAnswerInvalid,
+                value.Length == 0
+                    ? $"Question {q.Number}: the correct answer is empty."
+                    : $"Question {q.Number}: the correct answer \"{Excerpt(value)}\" is not the letter or the text of one of the options.",
+                line, error: true);
+            return false;
+        }
+
+        foreach (var raw in parts)
+        {
+            var part = TrimMarks(raw);
+            if (part.Length == 0)
             {
                 Warn(q, ImportIssueCodes.CorrectAnswerInvalid,
-                    value.Length == 0
-                        ? $"Question {q.Number}: the correct answer is empty."
-                        : $"Question {q.Number}: the correct answer \"{Excerpt(value)}\" is not the letter or the text of one of the options.",
+                    $"Question {q.Number}: the list of correct answers \"{Excerpt(value)}\" has an empty entry.", line, error: true);
+                return false;
+            }
+
+            var index = FindOption(part, options);
+            if (index < 0)
+            {
+                Warn(q, ImportIssueCodes.CorrectAnswerInvalid,
+                    $"Question {q.Number}: the correct answer \"{Excerpt(part)}\" is not the letter or the text of one of the options.",
                     line, error: true);
                 return false;
             }
+
+            if (found.Contains(index))
+            {
+                Warn(q, ImportIssueCodes.DuplicateCorrectAnswer,
+                    $"Question {q.Number}: the correct answer \"{Excerpt(part)}\" is listed more than once.", line, error: true);
+                return false;
+            }
+
+            found.Add(index);
         }
 
-        if (marked.Count == 1 && fromAnswer >= 0 && marked[0] != fromAnswer)
-        {
-            Warn(q, ImportIssueCodes.MultipleCorrectAnswers,
-                $"Question {q.Number}: the marked option and the \"Correct Answer\" line disagree.", q.Line, error: true);
-            return false;
-        }
-
-        index = marked.Count == 1 ? marked[0] : fromAnswer;
-        if (index < 0)
-            Warn(q, ImportIssueCodes.CorrectAnswerMissing, $"Question {q.Number}: the correct answer is missing.", q.Line, error: true);
-        return index >= 0;
+        return true;
     }
 
     // An answer value is an option letter ("B", "(b)", "Option B", "B) Queue", "ب") or exactly one option's text.
@@ -651,7 +722,7 @@ public static partial class QuestionDocumentParser
     private static string? KindOf(string value)
     {
         var lower = value.ToLowerInvariant();
-        if (lower.Contains("essay") || lower.Contains("written") || lower.Contains("مقال"))
+        if (lower.Contains("essay") || lower.Contains("written") || lower.Contains("short") || lower.Contains("مقال"))
             return Essay;
         if (lower.Contains("mcq") || lower.Contains("multiple") || lower.Contains("اختيار"))
             return Mcq;

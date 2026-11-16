@@ -38,15 +38,6 @@ export function ExamDetailsPage() {
 
   return (
     <div className="page">
-      <p>
-        <Link to="/exams">
-          <span className="icon-flip" aria-hidden="true">
-            ←
-          </span>{' '}
-          {t('details.back')}
-        </Link>
-      </p>
-
       {notice && (
         <Alert tone="success" onDismiss={() => setNotice(null)}>
           {t(`notice.${notice}`)}
@@ -57,8 +48,8 @@ export function ExamDetailsPage() {
       <section className="card" aria-labelledby="exam-heading">
         <div className="section-header">
           <div>
-            <h1 id="exam-heading" dir="auto">
-              {data.title}
+            <h1 id="exam-heading">
+              <bdi>{data.title}</bdi>
             </h1>
             <div className="badge-row">
               <StatusBadge status={data.status} />
@@ -69,8 +60,8 @@ export function ExamDetailsPage() {
         </div>
 
         {data.description && (
-          <p className="exam-description" dir="auto">
-            {data.description}
+          <p className="exam-description">
+            <bdi>{data.description}</bdi>
           </p>
         )}
 

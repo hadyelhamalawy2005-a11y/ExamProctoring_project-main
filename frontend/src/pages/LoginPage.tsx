@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ApiError, describeError } from '../api/errors';
+import { landingFor } from '../auth/roles';
 import { useAuth } from '../auth/AuthContext';
 import { tokenStore } from '../auth/tokenStore';
 import { Alert } from '../components/Feedback';
-import { FormField, describedBy } from '../components/FormField';
+import { FloatingField } from '../components/FloatingField';
 import { useI18n } from '../i18n/LanguageContext';
 import { LanguageToggle } from '../i18n/LanguageToggle';
 import { msg, serverFieldMsgs, type Msg } from '../i18n/serverMessages';
@@ -18,7 +19,7 @@ export function LoginPage() {
   const { session, signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from ?? '/exams';
+  const from = (location.state as { from?: string } | null)?.from;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,7 +29,7 @@ export function LoginPage() {
   const [sessionEnded, setSessionEnded] = useState(() => tokenStore.getEndReason() === 'sessionEnded');
   const [submitting, setSubmitting] = useState(false);
 
-  if (session) return <Navigate to={session.mustChangePassword ? '/change-password' : from} replace />;
+  if (session) return <Navigate to={session.mustChangePassword ? '/change-password' : landingFor(session.user.role, from)} replace />;
 
   const dismissSessionEnded = () => {
     tokenStore.dismissEndReason();
@@ -51,7 +52,7 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       const signedIn = await signIn(email.trim(), password);
-      navigate(signedIn.mustChangePassword ? '/change-password' : from, { replace: true });
+      navigate(signedIn.mustChangePassword ? '/change-password' : landingFor(signedIn.user.role, from), { replace: true });
     } catch (caught) {
       if (caught instanceof ApiError && caught.status === 400) {
         setFieldErrors(serverFieldMsgs(caught.fieldErrors));
@@ -66,49 +67,59 @@ export function LoginPage() {
   };
 
   return (
-    <main className="auth-page">
-      <form className="card auth-card form" onSubmit={(event) => void handleSubmit(event)} noValidate>
-        <div className="auth-toolbar">
+    <main className="login-page">
+      <form className="login-column" onSubmit={(event) => void handleSubmit(event)} noValidate>
+        <div className="login-toolbar">
           <LanguageToggle />
         </div>
-        <h1>{t('login.title')}</h1>
-        <p className="muted">{t('login.subtitle')}</p>
+        <svg className="login-logo" viewBox="0 0 24 24" width="48" height="48" aria-hidden="true" focusable="false">
+          <path
+            fill="currentColor"
+            d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9z"
+          />
+        </svg>
+        <p className="login-brand">Examora</p>
+        <h1 className="login-title">{t('login.title')}</h1>
+        <p className="login-subtitle">{t('login.subtitle')}</p>
         {sessionEnded && (
           <Alert tone="info" onDismiss={dismissSessionEnded}>
             {t('login.sessionEnded')}
           </Alert>
         )}
         {error && <Alert tone="error">{describeError(error.cause, i18n)}</Alert>}
-        <FormField id="login-email" label={t('login.email')} error={fieldErrors.email}>
-          <input
-            id="login-email"
-            type="email"
-            dir="ltr"
-            autoComplete="username"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            aria-invalid={Boolean(fieldErrors.email)}
-            aria-describedby={describedBy('login-email', fieldErrors.email)}
-          />
-        </FormField>
-        <FormField id="login-password" label={t('login.password')} error={fieldErrors.password}>
-          <input
-            id="login-password"
-            type="password"
-            dir="ltr"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            aria-invalid={Boolean(fieldErrors.password)}
-            aria-describedby={describedBy('login-password', fieldErrors.password)}
-          />
-        </FormField>
-        <button type="submit" className="button button-block" disabled={submitting}>
+        <FloatingField
+          id="login-email"
+          type="email"
+          ltr
+          autoComplete="username"
+          label={t('login.email')}
+          value={email}
+          onChange={setEmail}
+          error={fieldErrors.email}
+          disabled={submitting}
+        />
+        <FloatingField
+          id="login-password"
+          type="password"
+          ltr
+          autoComplete="current-password"
+          label={t('login.password')}
+          value={password}
+          onChange={setPassword}
+          error={fieldErrors.password}
+          disabled={submitting}
+        />
+        <button type="submit" className="login-submit" disabled={submitting}>
+          {submitting && <span className="login-spinner" aria-hidden="true" />}
           {submitting ? t('login.submitting') : t('login.submit')}
         </button>
-        <p className="muted">
-          <Link to="/register">{t('login.createAccount')}</Link>
-        </p>
+        <Link className="login-link" to="/forgot-password">
+          {t('login.forgot')}
+        </Link>
+        <Link className="login-link" to="/register">
+          {t('login.createAccount')}
+        </Link>
+        <p className="login-note">{t('login.accountsByAdmin')}</p>
       </form>
     </main>
   );

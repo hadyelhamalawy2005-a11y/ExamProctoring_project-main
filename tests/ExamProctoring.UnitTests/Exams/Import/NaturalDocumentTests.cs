@@ -257,12 +257,13 @@ public sealed class NaturalDocumentTests
     }
 
     [Fact]
-    public void TwoMarkedOptions_OrAMarkAndADifferentAnswerLine_AreReported()
+    public void TwoMarkedOptions_AreTwoCorrectAnswers_ButAMarkAndADifferentAnswerLineAreReported()
     {
         var two = Assert.Single(Parse("Q1: Q?", "*A) x", "*B) y").Questions);
         var conflict = Assert.Single(Parse("Q1: Q?", "*A) x", "B) y", "Answer: B").Questions);
 
-        Assert.Contains(ImportIssueCodes.MultipleCorrectAnswers, Errors(two));
+        Assert.Equal([true, true], two.Options.Select(o => o.IsCorrect));
+        Assert.Empty(Errors(two));
         Assert.Contains(ImportIssueCodes.MultipleCorrectAnswers, Errors(conflict));
     }
 

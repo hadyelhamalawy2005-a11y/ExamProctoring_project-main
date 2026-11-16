@@ -103,8 +103,8 @@ describe('session restoration', () => {
     tokenStore.setFromTokenResponse(tokenResponse());
     mockApi({ [EXAMS]: [emptyList], 'POST /api/auth/logout': [() => new Response(null, { status: 204 })] });
     const user = userEvent.setup();
-    renderApp('/exams');
-    await screen.findByRole('heading', { name: en['list.title'] });
+    renderApp('/profile');
+    await screen.findByRole('heading', { name: en['nav.profile'] });
 
     await user.click(screen.getByRole('button', { name: en['common.signOut'] }));
 
@@ -134,12 +134,12 @@ describe('access denied for other roles', () => {
     expect(screen.queryByText(ar['access.studentNote'])).not.toBeInTheDocument();
   });
 
-  it('sends a signed-in student who opens /register to the app instead of the form', async () => {
+  it('sends a signed-in student who opens /register to the student dashboard instead of the form', async () => {
     chooseLanguage('en');
     tokenStore.setFromTokenResponse(tokenResponse({ role: 'Student' }));
     mockApi({});
     renderApp('/register');
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: en['access.title'] })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(en['student.body'])).toBeInTheDocument());
   });
 });

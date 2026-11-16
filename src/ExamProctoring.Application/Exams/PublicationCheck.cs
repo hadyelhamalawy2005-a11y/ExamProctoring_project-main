@@ -45,8 +45,8 @@ public static class PublicationCheck
                         return $"{label} needs at least {QuestionRules.MinMcqOptions} options.";
                     if (!QuestionRules.HasAtMostOptions(own, maxMcqOptions))
                         return $"{label} has more options than the current maximum of {maxMcqOptions}.";
-                    if (!QuestionRules.HasExactlyOneCorrectOption(own))
-                        return $"{label} needs exactly one correct option.";
+                    if (!QuestionRules.HasAtLeastOneCorrectOption(own))
+                        return $"{label} needs at least one correct option.";
                     if (!QuestionRules.HasDistinctOptionTexts(own))
                         return $"{label} repeats an option text.";
                     break;

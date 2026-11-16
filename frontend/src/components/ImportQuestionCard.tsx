@@ -85,11 +85,13 @@ export function ImportQuestionCard({ draft, errors, onChange, onRemove }: Import
             return (
               <div key={option.key} className={`option-row ${error ? 'field-invalid' : ''}`}>
                 <input
-                  type="radio"
-                  name={`${id}-correct`}
+                  type="checkbox"
                   checked={option.isCorrect}
                   onChange={() =>
-                    edit((current) => ({ ...current, options: current.options.map((o) => ({ ...o, isCorrect: o.key === option.key })) }))
+                    edit((current) => ({
+                      ...current,
+                      options: current.options.map((o) => (o.key === option.key ? { ...o, isCorrect: !o.isCorrect } : o)),
+                    }))
                   }
                   aria-label={t('qform.optionCorrect', { n: number })}
                 />

@@ -11,7 +11,9 @@ import { EditExamPage } from './ExamEditorPages';
 // Answers GET /api/exams/e1 from a queue (the first load, then the reload) and PUT /api/exams/e1 with one response.
 function mockServer(loads: Array<Exam | Response>, putResponse: Response) {
   const queue = [...loads];
-  const fetchMock = vi.fn((_url: string, init: RequestInit) => {
+  const fetchMock = vi.fn((url: string, init: RequestInit) => {
+    // The edit page also shows the exam's questions (GET .../questions): an empty list here.
+    if (url.endsWith('/questions')) return Promise.resolve(jsonResponse(200, { items: [] }));
     if (init.method === 'PUT') return Promise.resolve(putResponse);
     const next = queue.length > 1 ? queue.shift()! : queue[0];
     return Promise.resolve(next instanceof Response ? next : jsonResponse(200, next));
@@ -43,7 +45,7 @@ async function changeTitleAndSave(title: string) {
 }
 
 const getCalls = (fetchMock: ReturnType<typeof mockServer>) =>
-  fetchMock.mock.calls.filter(([, init]) => (init as RequestInit).method === 'GET');
+  fetchMock.mock.calls.filter(([url, init]) => (init as RequestInit).method === 'GET' && !String(url).endsWith('/questions'));
 
 describe('EditExamPage when a save is refused', () => {
   it('409 because the exam has started: shows the server message, reloads, and replaces the form', async () => {

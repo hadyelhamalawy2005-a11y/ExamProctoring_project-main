@@ -104,7 +104,7 @@ public sealed class ExamLifecycleTests(ApiFactory factory)
 
     // Stored questions written outside the API, so each rule is checked again at publication (D34).
     [Theory]
-    [InlineData("two correct", "Question 2 needs exactly one correct option.")]
+    [InlineData("no correct", "Question 2 needs at least one correct option.")]
     [InlineData("one option", "Question 2 needs at least 2 options.")]
     [InlineData("essay with options", "Question 2 is an essay question and must not have options.")]
     [InlineData("repeated text", "Question 2 repeats an option text.")]
@@ -116,7 +116,7 @@ public sealed class ExamLifecycleTests(ApiFactory factory)
         var broken = NewQuestion(exam.Id, 2, problem == "essay with options" ? QuestionType.Essay : QuestionType.Mcq);
         var options = problem switch
         {
-            "two correct" => new[] { ("A", true), ("B", true) },
+            "no correct" => new[] { ("A", false), ("B", false) },
             "one option" => [("A", true)],
             "essay with options" => [("A", true), ("B", false)],
             _ => [("Same", true), ("SAME", false)],

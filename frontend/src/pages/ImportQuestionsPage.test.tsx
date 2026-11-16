@@ -90,8 +90,8 @@ const choose = async (user: ReturnType<typeof userEvent.setup>, examId: string) 
   user.selectOptions(await screen.findByLabelText(en['import.target.exam']), examId);
 
 describe('ImportQuestionsPage: choosing the file', () => {
-  it('is reachable from the header and starts with the upload step and a template download', async () => {
-    start({}, '/exams');
+  it('is reachable from the instructor home and starts with the upload step and a template download', async () => {
+    start({}, '/instructor');
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole('link', { name: en['nav.import'] }));
@@ -204,8 +204,8 @@ describe('ImportQuestionsPage: reviewing', () => {
     expect(screen.getByDisplayValue('What does CPU stand for?')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Second?')).toBeInTheDocument();
     const firstCard = screen.getAllByRole('listitem').find((li) => li.querySelector('textarea')?.value === 'What does CPU stand for?')!;
-    expect(within(firstCard).getByRole('radio', { name: en['qform.optionCorrect'].replace('{n}', 'A') })).toBeChecked();
-    expect(within(firstCard).getByRole('radio', { name: en['qform.optionCorrect'].replace('{n}', 'B') })).not.toBeChecked();
+    expect(within(firstCard).getByRole('checkbox', { name: en['qform.optionCorrect'].replace('{n}', 'A') })).toBeChecked();
+    expect(within(firstCard).getByRole('checkbox', { name: en['qform.optionCorrect'].replace('{n}', 'B') })).not.toBeChecked();
     expect(callsTo(fetchMock, IMPORT_E1)).toHaveLength(0);
     expect(screen.getByText(new RegExp(en['import.allGood']))).toBeInTheDocument();
   });
@@ -222,7 +222,7 @@ describe('ImportQuestionsPage: reviewing', () => {
     expect(screen.getByText(new RegExp(en['import.fixFirst']))).toBeInTheDocument();
 
     const problemCard = screen.getAllByRole('listitem').find((li) => li.querySelector('textarea')?.value === 'Which is a language?')!;
-    await user.click(within(problemCard).getByRole('radio', { name: en['qform.optionCorrect'].replace('{n}', 'B') }));
+    await user.click(within(problemCard).getByRole('checkbox', { name: en['qform.optionCorrect'].replace('{n}', 'B') }));
 
     await waitFor(() => expect(importButton('2 questions')).toBeEnabled());
     expect(screen.queryByText(en['import.card.attention'])).not.toBeInTheDocument();
@@ -344,6 +344,49 @@ describe('ImportQuestionsPage: importing', () => {
       ],
     });
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer access-1');
+  });
+
+  it('keeps several correct answers (Correct Answer: A, C) through the review and saves them all', async () => {
+    const multiple = goodQuestion({
+      number: 4,
+      text: 'Which of the following are prime numbers?',
+      marks: 2,
+      options: [
+        { label: 'A', text: '2', isCorrect: true },
+        { label: 'B', text: '4', isCorrect: false },
+        { label: 'C', text: '5', isCorrect: true },
+        { label: 'D', text: '9', isCorrect: false },
+      ],
+    });
+    const fetchMock = start({ [PREVIEW]: [() => jsonResponse(200, preview([multiple]))], [IMPORT_E1]: [savedResponse] });
+    const user = userEvent.setup();
+    await screen.findByRole('heading', { name: en['import.title'] });
+    await readDocument(user);
+
+    const mark = (letter: string) => screen.getByRole('checkbox', { name: en['qform.optionCorrect'].replace('{n}', letter) });
+    expect(['A', 'B', 'C', 'D'].map((letter) => (mark(letter) as HTMLInputElement).checked)).toEqual([true, false, true, false]);
+
+    await choose(user, 'e1');
+    await user.click(importButton('1 question'));
+    await screen.findByRole('heading', { name: en['import.doneTitle'] });
+    const [, init] = callsTo(fetchMock, IMPORT_E1)[0] as [string, RequestInit];
+    const saved = JSON.parse(init.body as string) as { questions: Array<{ type: string; options: Array<{ text: string; isCorrect: boolean }> }> };
+    expect(saved.questions[0].type).toBe('Mcq'); // the same single MCQ type
+    expect(saved.questions[0].options.map((option) => option.isCorrect)).toEqual([true, false, true, false]);
+  });
+
+  it('lets the instructor tick a second correct option in the review', async () => {
+    const fetchMock = start({ [PREVIEW]: [() => jsonResponse(200, preview([goodQuestion()]))], [IMPORT_E1]: [savedResponse] });
+    const user = userEvent.setup();
+    await screen.findByRole('heading', { name: en['import.title'] });
+    await readDocument(user);
+    await user.click(screen.getByRole('checkbox', { name: en['qform.optionCorrect'].replace('{n}', 'B') }));
+    await choose(user, 'e1');
+    await user.click(importButton('1 question'));
+    await screen.findByRole('heading', { name: en['import.doneTitle'] });
+    const [, init] = callsTo(fetchMock, IMPORT_E1)[0] as [string, RequestInit];
+    const saved = JSON.parse(init.body as string) as { questions: Array<{ options: Array<{ isCorrect: boolean }> }> };
+    expect(saved.questions[0].options.map((option) => option.isCorrect)).toEqual([true, true]);
   });
 
   it('preselects the exam from the link on the exam page', async () => {

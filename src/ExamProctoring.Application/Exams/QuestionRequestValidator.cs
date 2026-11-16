@@ -41,8 +41,8 @@ public sealed class QuestionRequestValidator : AbstractValidator<QuestionRequest
                     .WithMessage($"An MCQ question needs at least {QuestionRules.MinMcqOptions} options.")
                 .Must(options => QuestionRules.HasAtMostOptions(AsOptions(options), settings.MaxMcqOptions))
                     .WithMessage(_ => $"An MCQ question can have at most {settings.MaxMcqOptions} options.")
-                .Must(options => QuestionRules.HasExactlyOneCorrectOption(AsOptions(options)))
-                    .WithMessage("An MCQ question needs exactly one correct option.")
+                .Must(options => QuestionRules.HasAtLeastOneCorrectOption(AsOptions(options)))
+                    .WithMessage("An MCQ question needs at least one correct option.")
                 // Blank texts are reported on the option itself, so only the others are compared here.
                 .Must(options => QuestionRules.HasDistinctOptionTexts(AsOptions(options).Where(o => o.Text.Length > 0)))
                     .WithMessage("Options must not repeat the same text.");

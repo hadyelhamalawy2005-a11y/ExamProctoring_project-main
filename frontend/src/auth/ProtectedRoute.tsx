@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { describeError } from '../api/errors';
 import { Alert, PageLoader } from '../components/Feedback';
 import { useI18n } from '../i18n/LanguageContext';
 import { LanguageToggle } from '../i18n/LanguageToggle';
+import type { Role } from '../types/api';
 import { useAuth } from './AuthContext';
+import { homeFor } from './roles';
 
 // The session could not be restored because the server could not answer (network error, 429 or 5xx). The stored session
 // is kept: the user can try again or sign out.
@@ -32,9 +34,11 @@ function SessionUnavailable() {
   );
 }
 
-// Pages for signed-in instructors. This only shapes the UI: the backend enforces the Instructor role, account status
-// and ownership on every request, whatever the frontend shows.
-export function RequireInstructor({ children }: { children: ReactNode }) {
+// Pages for signed-in users of the given role(s). This only shapes the UI: the backend enforces the role, the account
+// status and ownership on every request, whatever the frontend shows. The role comes from the signed-in session, which
+// is filled from the backend's token response (never from anything the browser stored), so it cannot be edited in the
+// browser to see another role's pages.
+export function RequireRole({ roles, children }: { roles: readonly Role[]; children: ReactNode }) {
   const { status, session, signOut } = useAuth();
   const { t } = useI18n();
   const location = useLocation();
@@ -48,27 +52,42 @@ export function RequireInstructor({ children }: { children: ReactNode }) {
 
   if (session.mustChangePassword) return <Navigate to="/change-password" replace />;
 
-  if (session.user.role !== 'Instructor') {
+  const role = session.user.role;
+  if (!roles.includes(role)) {
+    const area = roles[0];
+    const email = '\u2066' + session.user.email + '\u2069';
     return (
       <main className="auth-page">
         <div className="card auth-card">
           <div className="auth-toolbar">
             <LanguageToggle />
           </div>
-          <h1>{t('access.title')}</h1>
+          <h1>{t(area === 'Admin' ? 'access.adminTitle' : area === 'Student' ? 'access.studentTitle' : 'access.title')}</h1>
           <p>
-            {t('access.body', { email: '\u2066' + session.user.email + '\u2069', role: t(`role.${session.user.role}`) })}
+            {area === 'Instructor'
+              ? t('access.body', { email, role: t(`role.${role}`) })
+              : t('access.bodyOther', { email, role: t(`role.${role}`) })}
           </p>
-          {session.user.role === 'Student' && <p className="muted">{t('access.studentNote')}</p>}
-          <button type="button" className="button" onClick={() => void signOut()}>
-            {t('common.signOut')}
-          </button>
+          {area === 'Instructor' && role === 'Student' && <p className="muted">{t('access.studentNote')}</p>}
+          <div className="button-row">
+            <Link className="button" to={homeFor(role)}>
+              {t('access.goHome')}
+            </Link>
+            <button type="button" className="button button-secondary" onClick={() => void signOut()}>
+              {t('common.signOut')}
+            </button>
+          </div>
         </div>
       </main>
     );
   }
 
   return <>{children}</>;
+}
+
+// Kept for the instructor pages and their tests.
+export function RequireInstructor({ children }: { children: ReactNode }) {
+  return <RequireRole roles={['Instructor']}>{children}</RequireRole>;
 }
 
 // Pages that need any signed-in account (the password change screen).

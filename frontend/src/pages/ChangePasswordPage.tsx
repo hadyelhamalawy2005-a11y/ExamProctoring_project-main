@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiError, describeError } from '../api/errors';
+import { homeFor } from '../auth/roles';
 import { useAuth } from '../auth/AuthContext';
 import { Alert } from '../components/Feedback';
 import { FormField, describedBy } from '../components/FormField';
@@ -42,8 +43,8 @@ export function ChangePasswordPage() {
 
     setSubmitting(true);
     try {
-      await changePassword(currentPassword, newPassword);
-      navigate('/exams', { replace: true });
+      const updated = await changePassword(currentPassword, newPassword);
+      navigate(homeFor(updated.user.role), { replace: true });
     } catch (caught) {
       if (caught instanceof ApiError && caught.status === 400) {
         setFieldErrors(serverFieldMsgs(caught.fieldErrors, { all: true }));

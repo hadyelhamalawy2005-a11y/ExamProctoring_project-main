@@ -238,7 +238,7 @@ public sealed class QuestionDocumentParserTests
     [Theory]
     [InlineData("Correct Answer: E", ImportIssueCodes.CorrectAnswerInvalid)]
     [InlineData("Correct Answer: Paris", ImportIssueCodes.CorrectAnswerInvalid)]
-    [InlineData("Correct Answer: A, B", ImportIssueCodes.CorrectAnswerInvalid)]
+    [InlineData("Correct Answer: A, E", ImportIssueCodes.CorrectAnswerInvalid)]
     [InlineData("Correct Answer: ", ImportIssueCodes.CorrectAnswerInvalid)]
     public void AnInvalidCorrectAnswer_IsReported(string answer, string code)
     {

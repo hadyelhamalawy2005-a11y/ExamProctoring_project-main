@@ -1,4 +1,4 @@
-import type { CodeQuestion, EditorPreferences } from '../types/code';
+import { normalizeCodeQuestion, type CodeQuestion, type EditorPreferences } from '../types/code';
 import { readJson, writeJson } from './safeStorage';
 
 // TEMPORARY, BROWSER-ONLY. The backend has no fields for these yet, so they live in localStorage, keyed by exam id:
@@ -18,7 +18,8 @@ const key = (examId: string) => `examExtras.${examId}`;
 const empty = (): ExamExtras => ({ subjectId: null, totalMarks: null, method: null, codeQuestions: [] });
 
 export function getExtras(examId: string): ExamExtras {
-  return { ...empty(), ...readJson<Partial<ExamExtras>>(key(examId), {}) };
+  const stored = { ...empty(), ...readJson<Partial<ExamExtras>>(key(examId), {}) };
+  return { ...stored, codeQuestions: stored.codeQuestions.map(normalizeCodeQuestion) };
 }
 
 export function saveExtras(examId: string, patch: Partial<ExamExtras>): ExamExtras {

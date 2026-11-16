@@ -115,7 +115,7 @@ function setWide(wide: boolean) {
 const ROLE_HOME: Record<Role, string> = { Admin: '/admin/accounts', Instructor: '/instructor', Student: '/student' };
 // What each role sees in its navigation (the bottom bar shows the profile as a tab, the sidebar as the person at its foot).
 const ITEMS: Record<Role, string[]> = {
-  Admin: [en['nav.accounts'], en['nav.newInstructor']],
+  Admin: [en['nav.accounts'], en['nav.newInstructor'], en['nav.newStudent']],
   Instructor: [en['nav.home'], en['nav.exams'], en['nav.import'], en['nav.incidents']],
   Student: [en['nav.home'], en['nav.exams'], en['nav.results']],
 };

@@ -107,9 +107,6 @@ export function LoginPage() {
           <Link className="auth-link" to="/forgot-password">
             {t('login.forgot')}
           </Link>
-          <Link className="auth-link" to="/register">
-            {t('login.createAccount')}
-          </Link>
         </div>
         <p className="auth-note">{t('login.accountsByAdmin')}</p>
       </form>

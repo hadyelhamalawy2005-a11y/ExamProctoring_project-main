@@ -9,7 +9,7 @@ import type {
 import { apiRequest } from './client';
 
 // AdminAccountsController (Admin role only). It lists and manages Student and Instructor accounts; Admin accounts are
-// never returned or changed. There is no search parameter and no endpoint to create a student account.
+// never returned or changed. There is no search parameter. The backend has no endpoint to create a student account yet.
 
 export function listAccounts(params: AccountListParams = {}, signal?: AbortSignal): Promise<AccountPage> {
   const query = new URLSearchParams();
@@ -31,6 +31,17 @@ export function createInstructor(request: CreateInstructorRequest): Promise<Crea
     method: 'POST',
     body: { fullName: request.fullName, email: request.email },
   });
+}
+
+// NOT IN THE BACKEND YET. Creating a student needs identity documents, so it will be a multipart/form-data request
+// (fullName, email, nationalIdNumber, nationalIdImage, collegeStudentId, collegeIdImage), never the JSON { fullName, email }
+// of an instructor. The body is built by identityFormData() in utils/identity.ts. The screen only sends it when the build
+// has VITE_ADMIN_CREATE_STUDENT=true, which must stay off until the backend has the endpoint. The 201 response is the same
+// shape as for an instructor, with role "Student" and no document content. See docs/Frontend_Pending_Backend.md.
+export const studentCreationSupported = (): boolean => import.meta.env.VITE_ADMIN_CREATE_STUDENT === 'true';
+
+export function createStudent(form: FormData): Promise<CreateInstructorResponse> {
+  return apiRequest<CreateInstructorResponse>('/api/admin/students', { method: 'POST', body: form });
 }
 
 // 200. Also ends the account's sessions and clears a lockout; the account's status does not change.

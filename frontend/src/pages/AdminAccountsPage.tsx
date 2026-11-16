@@ -44,6 +44,10 @@ export function AdminAccountsPage() {
         <Icon name="personAdd" size={18} />
         {t('admin.list.newInstructor')}
       </Link>
+      <Link to="/admin/students/new" className="button button-secondary button-block">
+        <Icon name="personAdd" size={18} />
+        {t('admin.list.newStudent')}
+      </Link>
 
       <div className="chips" role="group" aria-label={t('admin.list.role')}>
         <span className="chips-label">{t('admin.list.role')}</span>

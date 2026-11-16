@@ -8,6 +8,7 @@ import { useLoader } from '../hooks/useLoader';
 import { useI18n } from '../i18n/LanguageContext';
 import type { ExamStatus } from '../types/api';
 
+// Finished has no card here: the backend cannot count it yet (see docs/Frontend_Pending_Backend.md).
 const STATUSES: ExamStatus[] = ['Draft', 'Published', 'Cancelled'];
 
 // The instructor's home: a welcome card, the create button, and how many exams there are per status. The counts are the
@@ -25,7 +26,7 @@ export function InstructorHomePage() {
     [],
   );
 
-  const statIcon: Record<ExamStatus, IconName> = { Draft: 'edit', Published: 'shieldCheck', Cancelled: 'ban' };
+  const statIcon: Record<ExamStatus, IconName> = { Draft: 'edit', Published: 'shieldCheck', Cancelled: 'ban', Finished: 'award' };
 
   return (
     <div className="page">

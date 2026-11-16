@@ -46,6 +46,7 @@ const NAV: Record<Role, NavItem[]> = {
   Admin: [
     { to: '/admin/accounts', label: 'nav.accounts', icon: 'users', isActive: under('/admin/accounts') },
     { to: '/admin/instructors/new', label: 'nav.newInstructor', shortLabel: 'nav.newInstructorShort', icon: 'userPlus', isActive: exactly('/admin/instructors/new') },
+    { to: '/admin/students/new', label: 'nav.newStudent', shortLabel: 'nav.newStudentShort', icon: 'userPlus', isActive: exactly('/admin/students/new') },
     PROFILE,
   ],
 };
@@ -75,6 +76,7 @@ const TITLES: Array<[pattern: string, title: TranslationKey | null]> = [
   ['/admin/accounts', 'admin.list.title'],
   ['/admin/accounts/:accountId', 'title.account'],
   ['/admin/instructors/new', 'admin.create.title'],
+  ['/admin/students/new', 'admin.createStudent.title'],
 ];
 
 const titleFor = (pathname: string): TranslationKey | null | undefined =>

@@ -1057,6 +1057,11 @@ input[aria-invalid='true'] {
   color: var(--status-violation);
 }
 
+.badge-finished {
+  background: var(--highlight-soft);
+  color: var(--status-caution);
+}
+
 .badge-phase-upcoming {
   background: var(--status-scheduled-bg);
   color: var(--status-scheduled);
@@ -1877,36 +1882,195 @@ input[type='time'] {
   gap: var(--space-2);
 }
 
-.code-settings {
-  position: relative;
+/* Identity documents of a new student (IdentityDocumentField.tsx). */
+.id-section {
+  display: grid;
+  gap: var(--space-4);
 }
 
-.code-settings summary {
+.id-section h2 {
+  margin: 0;
+  font-size: var(--text-h3);
+}
+
+.required-mark {
+  color: var(--primary);
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.id-document {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.id-document legend {
+  padding: 0 var(--space-2);
+  font-weight: 600;
+}
+
+.id-label {
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.id-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 96px;
+  padding: var(--space-4);
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--primary);
+  font: inherit;
+  font-weight: 600;
   cursor: pointer;
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.id-upload:hover:not(:disabled) {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.id-upload:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.id-chosen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.id-preview {
+  width: 160px;
+  max-width: 100%;
+  max-height: 110px;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.id-chosen-info {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.id-filename {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+/* On / Off toggle (Switch.tsx): the thumb moves with inset-inline-start, so it follows the reading direction. */
+.switch-field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.switch-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.switch-label {
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-1);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
 
-.code-settings-body {
-  position: absolute;
-  z-index: 5;
-  inset-inline-start: 0;
-  display: grid;
-  gap: var(--space-3);
-  min-width: 14rem;
-  margin-top: var(--space-2);
-  padding: var(--space-3);
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-raised);
+.switch-track {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--field-border);
+  transition: background-color 0.15s;
 }
 
-.code-settings-body label {
+.switch-thumb {
+  position: absolute;
+  inset-block-start: 3px;
+  inset-inline-start: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--surface);
+  transition: inset-inline-start 0.15s;
+}
+
+.switch[aria-checked='true'] .switch-track {
+  background: var(--primary);
+}
+
+.switch[aria-checked='true'] .switch-thumb {
+  inset-inline-start: 21px;
+}
+
+.switch-state {
+  min-width: 2.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch-track,
+  .switch-thumb {
+    transition: none;
+  }
+}
+
+/* Where the automatically generated starter code will appear once the backend and an AI service exist. */
+.starter-placeholder {
   display: grid;
   gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.starter-placeholder strong {
+  font-size: var(--text-small);
+}
+
+.starter-placeholder p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-small);
 }
 
 .code-editor-host .cm-editor {

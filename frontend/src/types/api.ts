@@ -22,27 +22,11 @@ export interface TokenResponse {
   user: AuthUser;
 }
 
-// ---- Student sign-up (Application/Auth/RegisterStudentRequest.cs, RegisterStudentResponse.cs) ----
-
-// Exactly these four fields; the backend has no role or university field. confirmPassword is validated, never stored.
-export interface RegisterRequest {
-  fullName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-// 201 body. No tokens: the new student is not signed in.
-export interface RegisterResponse {
-  id: string;
-  fullName: string;
-  email: string;
-  role: 'Student';
-}
-
 // ---- Exams (Application/Exams/ExamRequest.cs, ExamResponse.cs, ExamListResponse.cs) ----
 
-export type ExamStatus = 'Draft' | 'Published' | 'Cancelled';
+// 'Finished' is not sent by the backend yet (it currently has Draft, Published and Cancelled). The frontend is ready to
+// show it as soon as the API returns it; see docs/Frontend_Pending_Backend.md.
+export type ExamStatus = 'Draft' | 'Published' | 'Cancelled' | 'Finished';
 export type ExamPhase = 'Upcoming' | 'Open' | 'Closed';
 
 export interface Exam {

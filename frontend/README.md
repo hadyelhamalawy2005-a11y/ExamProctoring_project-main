@@ -2,7 +2,7 @@
 
 A React (TypeScript, Vite) dashboard for instructors to manage their exams on the ASP.NET Core backend in `../src`:
 sign in, list and filter exams, create and edit exams, manage MCQ and Essay questions, and publish, unpublish or
-cancel exams. It also has a **student sign-up page** (`/register`) and is available in **Arabic (right-to-left, the
+cancel exams. There is no public sign-up: accounts are created by an administrator. It is available in **Arabic (right-to-left, the
 default) and English (left-to-right)**.
 
 The student exam-taking pages are **not** built. The backend has no student exam endpoints yet: Step 2.5 is blocked
@@ -15,7 +15,6 @@ Every request and response type is in `src/types/api.ts`, mirroring the backend 
 | Area | Endpoints |
 |---|---|
 | Authentication | `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/change-password`, `POST /api/auth/logout` |
-| Student sign-up | `POST /api/auth/register` with exactly `fullName`, `email`, `password`, `confirmPassword` (page: `/register`) |
 | Exams | `GET /api/exams?status=&page=&pageSize=`, `POST /api/exams`, `GET /api/exams/{id}`, `PUT /api/exams/{id}`, `DELETE /api/exams/{id}` |
 | Lifecycle | `POST /api/exams/{id}/publish`, `/unpublish`, `/cancel` |
 | Questions | `GET` and `POST /api/exams/{id}/questions`, `PUT` and `DELETE /api/questions/{id}` |

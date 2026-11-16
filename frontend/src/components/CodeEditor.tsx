@@ -8,14 +8,12 @@ import { bracketMatching, defaultHighlightStyle, indentOnInput, indentUnit, synt
 import { Compartment, EditorState, type Extension } from '@codemirror/state';
 import { EditorView, drawSelection, highlightActiveLine, keymap, lineNumbers } from '@codemirror/view';
 import { useEffect, useRef } from 'react';
-import type { CodeLanguageId, EditorMode, TabSize } from '../types/code';
+import { INDENT_SIZES, type CodeLanguageId } from '../types/code';
 
 interface CodeEditorProps {
   value: string;
   onChange?(value: string): void;
   language: CodeLanguageId;
-  mode: EditorMode;
-  tabSize: TabSize;
   autocomplete: boolean;
   readOnly?: boolean;
   ariaLabel: string;
@@ -35,17 +33,17 @@ const languageExtension = (language: CodeLanguageId): Extension => {
   }
 };
 
-// Vim and Emacs key bindings are separate packages loaded only when someone picks them.
-async function modeExtension(mode: EditorMode): Promise<Extension> {
-  if (mode === 'vim') return (await import('@replit/codemirror-vim')).vim();
-  if (mode === 'emacs') return (await import('@replit/codemirror-emacs')).emacs();
-  return [];
-}
+// Indentation follows the language (see INDENT_SIZES); it is never a setting the user picks.
+const indentExtension = (language: CodeLanguageId): Extension => {
+  const size = INDENT_SIZES[language];
+  return [indentUnit.of(' '.repeat(size)), EditorState.tabSize.of(size)];
+};
 
-// A real CodeMirror 6 editor: syntax highlighting per language, indentation that follows the chosen tab size, optional
-// autocomplete, and the Normal / Vim / Emacs key bindings. Changing a setting reconfigures the editor without losing
-// the text or the cursor. It does not run or check the code.
-export default function CodeEditor({ value, onChange, language, mode, tabSize, autocomplete, readOnly = false, ariaLabel }: CodeEditorProps) {
+// A real CodeMirror 6 editor: syntax highlighting and indentation per language, optional auto-completion, and the
+// the standard key bindings. Changing a setting reconfigures the editor without losing the text or the cursor.
+// Callers that must not carry text (or undo history) across a language change give the editor a key per language.
+// It does not run or check the code.
+export default function CodeEditor({ value, onChange, language, autocomplete, readOnly = false, ariaLabel }: CodeEditorProps) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
@@ -53,7 +51,6 @@ export default function CodeEditor({ value, onChange, language, mode, tabSize, a
 
   const compartments = useRef({
     language: new Compartment(),
-    mode: new Compartment(),
     indent: new Compartment(),
     complete: new Compartment(),
     readOnly: new Compartment(),
@@ -67,8 +64,6 @@ export default function CodeEditor({ value, onChange, language, mode, tabSize, a
       state: EditorState.create({
         doc: value,
         extensions: [
-          // The mode comes first so Vim / Emacs keys win over the default keymap.
-          c.mode.of([]),
           lineNumbers(),
           history(),
           drawSelection(),
@@ -79,7 +74,7 @@ export default function CodeEditor({ value, onChange, language, mode, tabSize, a
           syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
           keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap, ...completionKeymap, indentWithTab]),
           c.language.of(languageExtension(language)),
-          c.indent.of([indentUnit.of(' '.repeat(tabSize)), EditorState.tabSize.of(tabSize)]),
+          c.indent.of(indentExtension(language)),
           c.complete.of(autocomplete ? autocompletion() : []),
           c.readOnly.of(EditorState.readOnly.of(readOnly)),
           EditorView.contentAttributes.of({ 'aria-label': ariaLabel, spellcheck: 'false' }),
@@ -99,14 +94,13 @@ export default function CodeEditor({ value, onChange, language, mode, tabSize, a
   }, []);
 
   useEffect(() => {
-    view.current?.dispatch({ effects: compartments.current.language.reconfigure(languageExtension(language)) });
-  }, [language]);
-
-  useEffect(() => {
     view.current?.dispatch({
-      effects: compartments.current.indent.reconfigure([indentUnit.of(' '.repeat(tabSize)), EditorState.tabSize.of(tabSize)]),
+      effects: [
+        compartments.current.language.reconfigure(languageExtension(language)),
+        compartments.current.indent.reconfigure(indentExtension(language)),
+      ],
     });
-  }, [tabSize]);
+  }, [language]);
 
   useEffect(() => {
     view.current?.dispatch({ effects: compartments.current.complete.reconfigure(autocomplete ? autocompletion() : []) });
@@ -115,16 +109,6 @@ export default function CodeEditor({ value, onChange, language, mode, tabSize, a
   useEffect(() => {
     view.current?.dispatch({ effects: compartments.current.readOnly.reconfigure(EditorState.readOnly.of(readOnly)) });
   }, [readOnly]);
-
-  useEffect(() => {
-    let cancelled = false;
-    void modeExtension(mode).then((extension) => {
-      if (!cancelled) view.current?.dispatch({ effects: compartments.current.mode.reconfigure(extension) });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [mode]);
 
   // The text changed from outside (for example a reset): replace it only when it really differs.
   useEffect(() => {

@@ -128,15 +128,6 @@ export function validateQuestionDraft(values: QuestionDraftValues): FieldErrors 
   return found;
 }
 
-// ---- Student sign-up (POST /api/auth/register) ----
-
-export interface RegisterFormValues {
-  fullName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
 // The backend's EmailRules, applied to the trimmed value: 1-256 characters, no whitespace, control or invisible format
 // characters, exactly one '@' with text on both sides, and a domain that contains a dot, doesn't start or end with '.' or
 // '-' and has no "..". Any domain and non-English letters are allowed.
@@ -148,28 +139,6 @@ export function isValidEmail(raw: string): boolean {
   if (at <= 0 || at === value.length - 1 || at !== value.lastIndexOf('@')) return false;
   const domain = value.slice(at + 1);
   return domain.includes('.') && !/^[.-]/.test(domain) && !/[.-]$/.test(domain) && !domain.includes('..');
-}
-
-export function validateRegisterForm(values: RegisterFormValues): FieldErrors {
-  const errors: FieldErrors = {};
-
-  const name = values.fullName.trim();
-  if (!name) errors.fullName = msg('val.fullNameRequired');
-  else if (name.length > LIMITS.fullNameMax) errors.fullName = msg('val.fullNameMax', { max: LIMITS.fullNameMax });
-  else if (/\p{Cc}/u.test(values.fullName)) errors.fullName = msg('val.fullNameControl');
-
-  if (!values.email.trim()) errors.email = msg('val.emailRequired');
-  else if (!isValidEmail(values.email)) errors.email = msg('val.emailInvalid');
-
-  // The password policy (Identity): at least 8 characters, an upper case letter, a lower case letter and a digit.
-  if (!values.password) errors.password = msg('val.passwordRequired');
-  else if (values.password.length < LIMITS.passwordMin) errors.password = msg('val.passwordMin', { n: LIMITS.passwordMin });
-  else if (!/[A-Z]/.test(values.password)) errors.password = msg('val.passwordUpper');
-  else if (!/[a-z]/.test(values.password)) errors.password = msg('val.passwordLower');
-  else if (!/\d/.test(values.password)) errors.password = msg('val.passwordDigit');
-
-  if (values.confirmPassword !== values.password) errors.confirmPassword = msg('val.passwordsMismatch');
-  return errors;
 }
 
 export const REASON_MAX = 500;

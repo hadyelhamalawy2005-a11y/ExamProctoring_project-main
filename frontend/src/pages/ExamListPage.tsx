@@ -1,6 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { describeError } from '../api/errors';
-import { listExams } from '../api/exams';
+import { finishedStatusSupported, listExams } from '../api/exams';
 import { Chip } from '../components/Chip';
 import { Alert, EmptyState, PageLoader } from '../components/Feedback';
 import { Icon } from '../components/Icon';
@@ -8,10 +8,10 @@ import { Pagination } from '../components/Pagination';
 import { PhaseBadge, StatusBadge } from '../components/StatusBadge';
 import { useLoader } from '../hooks/useLoader';
 import { useI18n } from '../i18n/LanguageContext';
-import type { ExamStatus } from '../types/api';
+import type { ExamPage, ExamStatus } from '../types/api';
 import { formatDuration } from '../utils/dates';
 
-const STATUSES: ExamStatus[] = ['Draft', 'Published', 'Cancelled'];
+const STATUSES: ExamStatus[] = ['Draft', 'Published', 'Cancelled', 'Finished'];
 const PAGE_SIZE = 10; // the backend default
 
 // GET /api/exams: the instructor's own exams, newest start first, paged, with an optional status filter. Laid out like the
@@ -24,7 +24,12 @@ export function ExamListPage() {
   const status = STATUSES.find((value) => value === params.get('status'));
   const page = Math.max(1, Number.parseInt(params.get('page') ?? '1', 10) || 1);
 
-  const exams = useLoader((signal) => listExams({ status, page, pageSize: PAGE_SIZE }, signal), [status, page]);
+  // Until the backend reports Finished, asking it for that status would only be refused: show the empty tab and say why.
+  const finishedPending = status === 'Finished' && !finishedStatusSupported();
+  const exams = useLoader(
+    (signal) => (finishedPending ? Promise.resolve<ExamPage>({ items: [], page: 1, pageSize: PAGE_SIZE, totalCount: 0 }) : listExams({ status, page, pageSize: PAGE_SIZE }, signal)),
+    [status, page, finishedPending],
+  );
 
   const setQuery = (changes: Record<string, string | undefined>) => {
     const next = new URLSearchParams(params);
@@ -63,7 +68,7 @@ export function ExamListPage() {
 
       {exams.data && exams.data.items.length === 0 && (
         <EmptyState icon="assignmentOutline" title={status ? t('list.emptyFiltered', { status: t(`status.${status}`) }) : t('list.emptyNone')}>
-          {exams.data.totalCount > 0 ? <p>{t('list.pastEnd')}</p> : <p>{t('list.createFirst')}</p>}
+          {finishedPending ? <p>{t('list.finishedPending')}</p> : exams.data.totalCount > 0 ? <p>{t('list.pastEnd')}</p> : <p>{t('list.createFirst')}</p>}
         </EmptyState>
       )}
 

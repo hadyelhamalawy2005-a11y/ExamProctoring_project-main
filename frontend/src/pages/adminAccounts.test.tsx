@@ -123,9 +123,10 @@ describe('the accounts list', () => {
     renderApp('/admin/accounts');
     expect(await screen.findByRole('heading', { name: en['admin.list.title'] })).toBeInTheDocument();
     const nav = screen.getByRole('navigation', { name: en['nav.main'] });
-    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Accounts', 'New', 'Profile']);
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Accounts', 'Instructor', 'Student', 'Profile']);
     expect(within(nav).getByRole('link', { name: en['nav.profile'] })).toHaveAttribute('href', '/profile');
     expect(screen.getByRole('link', { name: en['admin.list.newInstructor'] })).toHaveAttribute('href', '/admin/instructors/new');
+    expect(screen.getByRole('link', { name: en['admin.list.newStudent'] })).toHaveAttribute('href', '/admin/students/new');
   });
 });
 

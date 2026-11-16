@@ -9,6 +9,11 @@ export interface ExamListParams {
   pageSize: number; // 1-100
 }
 
+// The backend does not know the status "Finished" yet: it rejects it as a filter and never returns it. The frontend
+// only asks for it (and so only offers results for it) when the deployment is built with VITE_FINISHED_STATUS=true,
+// which is for the day the backend ships it. See docs/Frontend_Pending_Backend.md.
+export const finishedStatusSupported = (): boolean => import.meta.env.VITE_FINISHED_STATUS === 'true';
+
 export function listExams(params: ExamListParams, signal?: AbortSignal): Promise<ExamPage> {
   const query = new URLSearchParams({ page: String(params.page), pageSize: String(params.pageSize) });
   if (params.status) query.set('status', params.status);

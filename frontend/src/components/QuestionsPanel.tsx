@@ -291,7 +291,7 @@ export function QuestionsPanel({ exam, onExamStale }: QuestionsPanelProps) {
                   <div className="question-head">
                     <span className="badge badge-neutral">{t('questions.typeCode')}</span>
                     <span className="question-marks">{t('questions.marks', { marks: formatNumber(question.marks, twoDecimals) })}</span>
-                    <span className="badge badge-neutral">{question.evaluation === 'ai' ? t('code.eval.ai') : t('code.eval.manual')}</span>
+                    <span className="badge badge-neutral">{question.autoCompletionEnabled ? t('code.autocompleteOn') : t('code.autocompleteOff')}</span>
                   </div>
                   <p className="question-text" dir="auto">
                     {question.text}

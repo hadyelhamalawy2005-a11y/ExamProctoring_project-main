@@ -22,11 +22,12 @@ describe('the sign-in page design', () => {
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
   });
 
-  it('keeps student registration and links to the forgot-password screen', async () => {
+  it('links to the forgot-password screen and offers no way to register', async () => {
     mockApi({});
     renderApp('/login');
-    expect(await screen.findByRole('link', { name: en['login.createAccount'] })).toHaveAttribute('href', '/register');
-    expect(screen.getByRole('link', { name: en['login.forgot'] })).toHaveAttribute('href', '/forgot-password');
+    expect(await screen.findByRole('link', { name: en['login.forgot'] })).toHaveAttribute('href', '/forgot-password');
+    expect(document.querySelector('a[href="/register"]')).toBeNull();
+    expect(screen.queryByText(/create .*account|إنشاء حساب/i)).not.toBeInTheDocument();
   });
 
   it('the forgot-password screen says there is no automatic reset and returns to sign-in', async () => {

@@ -49,7 +49,7 @@ export function ExamPreviewPage() {
   const current = items[Math.min(index, items.length - 1)];
   const subject = subjectName(extras.subjectId);
   const answered = (item: PreviewItem) => {
-    if (item.kind === 'code') return (code[item.question.id] ?? item.question.starterCode).trim() !== item.question.starterCode.trim();
+    if (item.kind === 'code') return Boolean(code[item.question.id]?.trim());
     return item.question.type === 'Mcq' ? (choices[item.question.id]?.length ?? 0) > 0 : Boolean(essays[item.question.id]?.trim());
   };
 
@@ -169,7 +169,7 @@ export function ExamPreviewPage() {
                 examId={examId}
                 question={current.question}
                 idPrefix={`preview-${current.question.id}`}
-                value={code[current.question.id] ?? current.question.starterCode}
+                value={code[current.question.id] ?? ''}
                 onChange={(value) => setCode((previous) => ({ ...previous, [current.question.id]: value }))}
               />
             )}

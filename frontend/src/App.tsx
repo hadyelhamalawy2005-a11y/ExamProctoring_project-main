@@ -8,7 +8,7 @@ import { AdminLayout, ProfileLayout, StudentLayout } from './components/RoleLayo
 import { LanguageProvider, useI18n } from './i18n/LanguageContext';
 import { AdminAccountDetailPage } from './pages/AdminAccountDetailPage';
 import { AdminAccountsPage } from './pages/AdminAccountsPage';
-import { AdminCreateInstructorPage } from './pages/AdminCreateInstructorPage';
+import { AdminCreateAccountPage } from './pages/AdminCreateAccountPage';
 import { ChangePasswordPage } from './pages/ChangePasswordPage';
 import { CreateExamPage, EditExamPage } from './pages/ExamEditorPages';
 import { ExamDetailsPage } from './pages/ExamDetailsPage';
@@ -21,7 +21,6 @@ import { ExamPreviewPage } from './pages/ExamPreviewPage';
 import { ImportQuestionsPage } from './pages/ImportQuestionsPage';
 import { LoginPage } from './pages/LoginPage';
 import { ProfilePage } from './pages/ProfilePage';
-import { RegisterPage } from './pages/RegisterPage';
 import { StudentHomePage } from './pages/StudentHomePage';
 import { AuthShell } from './components/AuthShell';
 
@@ -51,7 +50,6 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route
         path="/change-password"
@@ -95,7 +93,8 @@ export function AppRoutes() {
         <Route index element={<Navigate to="accounts" replace />} />
         <Route path="accounts" element={<AdminAccountsPage />} />
         <Route path="accounts/:accountId" element={<AdminAccountDetailPage />} />
-        <Route path="instructors/new" element={<AdminCreateInstructorPage />} />
+        <Route path="instructors/new" element={<AdminCreateAccountPage key="Instructor" role="Instructor" />} />
+        <Route path="students/new" element={<AdminCreateAccountPage key="Student" role="Student" />} />
       </Route>
 
       {/* Student: layout and placeholder only; the backend has no student exam endpoints yet. */}

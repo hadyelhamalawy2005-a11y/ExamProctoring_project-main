@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { en } from '../i18n/en';
@@ -134,12 +134,12 @@ describe('access denied for other roles', () => {
     expect(screen.queryByText(ar['access.studentNote'])).not.toBeInTheDocument();
   });
 
-  it('sends a signed-in student who opens /register to the student dashboard instead of the form', async () => {
+  it('has no public registration page: /register is the not-found page, signed in or not', async () => {
     chooseLanguage('en');
-    tokenStore.setFromTokenResponse(tokenResponse({ role: 'Student' }));
     mockApi({});
     renderApp('/register');
 
-    await waitFor(() => expect(screen.getByText(en['student.body'])).toBeInTheDocument());
+    expect(await screen.findByRole('heading', { name: en['notFound.title'] })).toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 });

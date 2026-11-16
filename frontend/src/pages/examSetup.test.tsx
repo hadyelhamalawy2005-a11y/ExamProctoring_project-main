@@ -105,7 +105,7 @@ describe('question types', () => {
 
     await user.click(within(picker).getByRole('button', { name: 'Code' }));
     expect(screen.getByRole('form', { name: 'Code question' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Evaluation')).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Auto-Completion' })).toBeInTheDocument();
   });
 
   it('saves a code question in this browser and makes NO request to the server for it', async () => {
@@ -254,7 +254,7 @@ describe('View as student', () => {
   it('shows what a student sees, never the answers, and writes nothing', async () => {
     saveExtras('e1', {
       subjectId: 'programming',
-      codeQuestions: [{ ...emptyCodeQuestion('c1'), text: 'Write a loop.', marks: 4, languages: ['python', 'java'], autocomplete: false }],
+      codeQuestions: [{ ...emptyCodeQuestion('c1'), text: 'Write a loop.', marks: 4, languages: ['python', 'java'], autoCompletionEnabled: false }],
     });
     const fetchMock = mockApi({
       [`GET ${EXAM}`]: [() => jsonResponse(200, exam())],
@@ -281,7 +281,7 @@ describe('View as student', () => {
     // Code: language, settings, autocomplete state, and a real editor.
     expect(screen.getByText('Write a loop.')).toBeInTheDocument();
     expect(screen.getByLabelText('Language', { selector: '#preview-c1-language' })).toHaveValue('python');
-    expect(screen.getByTestId('autocomplete-state')).toHaveTextContent('Autocomplete: off');
+    expect(screen.getByTestId('autocomplete-state')).toHaveTextContent('Auto-completion: off');
     expect(await screen.findByRole('textbox', { name: 'Code editor' })).toBeInTheDocument();
 
     // Submitting is disabled, and only GET requests were ever made.

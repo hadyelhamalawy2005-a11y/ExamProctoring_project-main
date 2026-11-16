@@ -44,7 +44,8 @@ export function ExamActions({ exam, onChanged, onDeleted, onStale }: ExamActions
   const [outcome, setOutcome] = useState<Outcome | null>(null);
 
   const beforeStart = exam.phase === 'Upcoming';
-  const canEdit = beforeStart && exam.status !== 'Cancelled';
+  const finished = exam.status === 'Finished';
+  const canEdit = beforeStart && exam.status !== 'Cancelled' && !finished;
 
   const run = async () => {
     if (!pending) return;
@@ -111,7 +112,8 @@ export function ExamActions({ exam, onChanged, onDeleted, onStale }: ExamActions
       </div>
 
       {exam.status === 'Cancelled' && <p className="muted">{t('actions.cancelledNote')}</p>}
-      {exam.status !== 'Cancelled' && !beforeStart && (
+      {finished && <p className="muted">{t('actions.finishedNote')}</p>}
+      {exam.status !== 'Cancelled' && !finished && !beforeStart && (
         <p className="muted">
           {t('actions.startedNote')}
           {exam.status === 'Draft' ? ` ${t('actions.startedDraftNote')}` : ''}

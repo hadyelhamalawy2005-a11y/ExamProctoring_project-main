@@ -97,13 +97,13 @@ export function CodeQuestionForm({ question, onSubmit, onCancel }: CodeQuestionF
           {CODE_LANGUAGES.map((language) => (
             <label key={language.id} className="check">
               <input type="checkbox" checked={draft.languages.includes(language.id)} onChange={() => setLanguages(toggle(draft.languages, language.id))} />
-              {language.name}
+              <bdi dir="ltr">{language.name}</bdi>
             </label>
           ))}
         </div>
         <label htmlFor={`${id}-deflang`}>
           <span>{t('code.defaultLanguage')}</span>
-          <select id={`${id}-deflang`} value={draft.defaultLanguage} onChange={(event) => update({ defaultLanguage: event.target.value as CodeLanguageId })}>
+          <select id={`${id}-deflang`} dir="ltr" value={draft.defaultLanguage} onChange={(event) => update({ defaultLanguage: event.target.value as CodeLanguageId })}>
             {CODE_LANGUAGES.filter((language) => draft.languages.includes(language.id)).map((language) => (
               <option key={language.id} value={language.id}>
                 {language.name}

@@ -39,6 +39,7 @@ export function CodeAnswerPanel({ examId, question, value, onChange, idPrefix }:
           <span>{t('code.language')}</span>
           <select
             id={`${idPrefix}-language`}
+            dir="ltr"
             value={prefs.language}
             onChange={(event) => setPrefs({ ...prefs, language: event.target.value as EditorPreferences['language'] })}
           >

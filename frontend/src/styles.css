@@ -1342,6 +1342,23 @@ a.item-card:hover {
   grid-column: 2 / -1;
 }
 
+/* The "default" pickers inside the code question's option groups are labelled like every other field. */
+.options-editor > label:not(.check) {
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+
+.options-editor > label:not(.check) select {
+  font-size: var(--text-body);
+  font-weight: 400;
+}
+
+.code-questions {
+  margin-top: var(--space-5);
+}
+
 .options-editor > .button {
   justify-self: start;
 }
@@ -1913,9 +1930,12 @@ input[type='time'] {
   color: var(--text-muted);
 }
 
-.code-editor-host .cm-activeLine,
+.code-editor-host .cm-activeLine {
+  background: var(--surface-sunken);
+}
+
 .code-editor-host .cm-activeLineGutter {
-  background: var(--primary-soft);
+  background: var(--line);
 }
 
 .code-editor-host .cm-editor .cm-selectionBackground,
